@@ -7,6 +7,8 @@
     <uses-sdk
         android:minSdkVersion="15"
         android:targetSdkVersion="17" />
+    
+    <uses-permission android:name="android.permission.GET_TASKS"/>
 
     <application
         android:allowBackup="true"
@@ -23,6 +25,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service android:name="co.in.divi.launcher.DaemonService" >
+        </service>
     </application>
 
 </manifest>
