@@ -1,0 +1,18 @@
+su
+
+echo "==== mounting /system as RW ===="
+mount -o remount,rw /system
+
+echo "==== moving apk to
+
+mv /system/app/SystemUI.apk /system/app/SystemUI.apk.bkp
+mv /system/app/SystemUI.odex /system/app/SystemUI.odex.bkp
+
+mv /system/app/Launcher.apk /system/app/Launcher.apk.bkp
+mv /system/app/Launcher.odex /system/app/Launcher.odex.bkp
+
+
+
+echo "==== moving /system as RO ===="
+mount -o remount,ro /system
+exit

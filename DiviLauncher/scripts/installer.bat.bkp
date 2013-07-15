@@ -1,0 +1,31 @@
+# TODO: change to bat
+
+adb install %APP%
+adb shell <<< EOC
+# for ainol crystal this works without a prompt
+# if it is going to prompt anyway, don't do this step
+# do it from inside the app itself
+su
+chown root:root $APP_DATA/bin/su
+chmod a+rx $APP_DATA/bin/su
+chmod +s $APP_DATA/bin/su
+<<< EOC
+
+#throw an intent to start the app
+adb shell am start -n "co.in.divi.launcher/co.in.divi.launcher.HomeActivity" -a android.intent.action.MAIN -c android.intent.category.LAUNCHER
+
+
+# the following can now be done when the app begins
+su
+# remount /system as rw
+mount -o remount,rw /system
+WHICH_SU=`which su`
+mv $WHICH_SU $WHICH_SU.bkp
+mv /mnt/sdcard/su $WHICH_SU
+# fix the perms - is this required? make it movable by the app
+chmod a+rwx $WHICH_SU
+# disconnect adb
+# should be tested separately from the others
+
+
+
