@@ -5,11 +5,73 @@
     android:layout_height="match_parent"
     android:background="@drawable/bg"
     tools:context=".HomeActivity" >
+    <TextView android:id="@+id/version"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/black"/>
 
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:src="@drawable/divi_logo" />
+
+    <Button
+        android:id="@+id/reboot"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:text="Reboot" />
+
+    <CheckBox
+        android:id="@+id/adb"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/reboot"
+        android:layout_centerHorizontal="true"
+        android:text="Enable ADB"
+        android:textColor="@android:color/black" />
+
+    <Button
+        android:id="@+id/crash"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:text="Throw exception" />
+
+    <Button
+        android:id="@+id/settings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_toRightOf="@+id/crash"
+        android:text="Settings" />
+
+    <Button
+        android:id="@+id/lock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_toRightOf="@+id/settings"
+        android:text="Lock now" />
+
+    <CheckBox
+        android:id="@+id/admin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_toLeftOf="@+id/crash"
+        android:text="Divi Admin enabled"
+        android:textColor="@android:color/black" />
+
+    <Button
+        android:id="@+id/gallery"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_toRightOf="@+id/lock"
+        android:text="Open Gallery"
+        android:textColor="@android:color/black" />
 
 </RelativeLayout>
