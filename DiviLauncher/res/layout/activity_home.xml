@@ -5,10 +5,12 @@
     android:layout_height="match_parent"
     android:background="@drawable/bg"
     tools:context=".HomeActivity" >
-    <TextView android:id="@+id/version"
+
+    <TextView
+        android:id="@+id/version"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="@android:color/black"/>
+        android:textColor="@android:color/black" />
 
     <ImageView
         android:layout_width="wrap_content"
@@ -21,7 +23,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:text="Reboot" />
+        android:text="Reboot"
+        android:visibility="gone" />
 
     <CheckBox
         android:id="@+id/adb"
@@ -30,7 +33,8 @@
         android:layout_below="@+id/reboot"
         android:layout_centerHorizontal="true"
         android:text="Enable ADB"
-        android:textColor="@android:color/black" />
+        android:textColor="@android:color/black"
+        android:visibility="gone" />
 
     <Button
         android:id="@+id/crash"
@@ -38,7 +42,8 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:text="Throw exception" />
+        android:text="Throw exception"
+        android:visibility="gone" />
 
     <Button
         android:id="@+id/settings"
@@ -54,7 +59,8 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_toRightOf="@+id/settings"
-        android:text="Lock now" />
+        android:text="Lock now"
+        android:visibility="gone" />
 
     <CheckBox
         android:id="@+id/admin"
@@ -63,7 +69,8 @@
         android:layout_alignParentBottom="true"
         android:layout_toLeftOf="@+id/crash"
         android:text="Divi Admin enabled"
-        android:textColor="@android:color/black" />
+        android:textColor="@android:color/black"
+        android:visibility="gone" />
 
     <Button
         android:id="@+id/gallery"
@@ -72,6 +79,7 @@
         android:layout_alignParentBottom="true"
         android:layout_toRightOf="@+id/lock"
         android:text="Open Gallery"
-        android:textColor="@android:color/black" />
+        android:textColor="@android:color/black"
+        android:visibility="gone" />
 
 </RelativeLayout>
