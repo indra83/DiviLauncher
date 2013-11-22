@@ -53,7 +53,7 @@ public class SuProcWrapper {
         field.setAccessible(true);
         boolean hasExited = false;
         try {
-            hasExited = (boolean) field.get( mProcess );
+            hasExited = (Boolean) field.get( mProcess );
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
