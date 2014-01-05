@@ -1,21 +1,29 @@
 package co.in.divi.launcher;
 
+import java.util.Random;
+
+import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.AlarmManager;
+import android.app.AlertDialog;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.provider.Settings;
+import android.text.InputType;
 import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.TextView;
 import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
 
 public class HomeActivity extends Activity {
 	private static final String	TAG	= HomeActivity.class.getName();
@@ -35,6 +43,25 @@ public class HomeActivity extends Activity {
 		mDeviceAdmin = new ComponentName(this, DiviDeviceAdmin.class);
 		settingsManager = VersionedSettingsManager.newInstance(this);
 		setContentView(R.layout.activity_home);
+
+		findViewById(R.id.logo).setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				Log.d(TAG, "launching divi");
+				Intent i;
+				PackageManager manager = getPackageManager();
+				try {
+					i = manager.getLaunchIntentForPackage("co.in.divi");
+					if (i == null)
+						throw new PackageManager.NameNotFoundException();
+					i.addCategory(Intent.CATEGORY_LAUNCHER);
+					startActivity(i);
+				} catch (PackageManager.NameNotFoundException e) {
+					Log.e(TAG, "error launching divi", e);
+					Toast.makeText(HomeActivity.this, "Error launching Divi", Toast.LENGTH_LONG).show();
+				}
+			}
+		});
 
 		Util.fixBackgroundRepeat(findViewById(R.id.root));
 
@@ -57,10 +84,30 @@ public class HomeActivity extends Activity {
 		findViewById(R.id.settings).setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				startActivity(new Intent(Settings.ACTION_SETTINGS));
+				final int challenge = new Random().nextInt(10000);
+				final EditText input = new EditText(HomeActivity.this);
+				input.setInputType(InputType.TYPE_CLASS_NUMBER);
+				new AlertDialog.Builder(HomeActivity.this).setTitle("Enter password")
+						.setMessage("Enter the key for challenge: " + challenge).setView(input)
+						.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int whichButton) {
+								int response = Integer.parseInt(input.getText().toString());
+								if (AdminPasswordManager.getInstance().isAuthorized(challenge, response)) {
+									AdminPasswordManager.getInstance().setLastAuthorizedTime(System.currentTimeMillis());
+									startActivity(new Intent(Settings.ACTION_SETTINGS));
+								} else {
+									Toast.makeText(HomeActivity.this, "Authorization failed", Toast.LENGTH_SHORT).show();
+								}
+							}
+						}).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int whichButton) {
+								// Do nothing.
+							}
+						}).show();
 			}
 		});
 		findViewById(R.id.lock).setOnClickListener(new View.OnClickListener() {
+			@SuppressLint("NewApi")
 			@Override
 			public void onClick(View v) {
 				mDPM.setCameraDisabled(mDeviceAdmin, true);
@@ -81,7 +128,18 @@ public class HomeActivity extends Activity {
 		adb = (CheckBox) findViewById(R.id.adb);
 		admin = (CheckBox) findViewById(R.id.admin);
 
-		((TextView) findViewById(R.id.version)).setText("adb fix");
+		((TextView) findViewById(R.id.version)).setText(Config.VERSION);
+
+		// hide all
+		if (true) {
+			findViewById(R.id.reboot).setVisibility(View.GONE);
+			findViewById(R.id.crash).setVisibility(View.GONE);
+			findViewById(R.id.settings).setVisibility(View.VISIBLE);
+			findViewById(R.id.lock).setVisibility(View.GONE);
+			findViewById(R.id.gallery).setVisibility(View.GONE);
+			findViewById(R.id.adb).setVisibility(View.GONE);
+			findViewById(R.id.admin).setVisibility(View.GONE);
+		}
 	}
 
 	@Override
@@ -125,5 +183,16 @@ public class HomeActivity extends Activity {
 				}
 			}
 		});
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		if (!mDPM.isAdminActive(mDeviceAdmin)) {
+			Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+			intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, mDeviceAdmin);
+			intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Set Divi Device Administration");
+			startActivity(intent);
+		}
 	}
 }

@@ -14,17 +14,17 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 public class DaemonService extends Service {
 	private static final String	TAG				= DaemonService.class.getName();
 
-	private static final int	SLEEP_TIME		= 2000;							// polling interval
-
 	DevicePolicyManager			mDPM;
 	ComponentName				mDeviceAdmin;
 	Notification				notice;
 	PowerManager				powerManager;
+	AdminPasswordManager		adminPasswordManager;
 
 	DaemonThread				daemonThread	= null;
 
@@ -39,6 +39,7 @@ public class DaemonService extends Service {
 		powerManager = (PowerManager) getSystemService(POWER_SERVICE);
 		mDPM = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
 		mDeviceAdmin = new ComponentName(this, DiviDeviceAdmin.class);
+		adminPasswordManager = AdminPasswordManager.getInstance();
 		// registBroadcastReceiver();
 	}
 
@@ -46,8 +47,8 @@ public class DaemonService extends Service {
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		Log.d(TAG, "onStartCommand");
 
-		notice = new Notification.Builder(this).setContentTitle("Divi Launcher").setContentText("Blah").setSmallIcon(R.drawable.divi_logo)
-				.build();
+		notice = new NotificationCompat.Builder(this).setContentTitle("Divi Launcher").setContentText("Blah")
+				.setSmallIcon(R.drawable.divi_logo).build();
 		if (daemonThread == null || !daemonThread.isAlive()) {
 			Log.d(TAG, "creating new thread");
 			daemonThread = new DaemonThread();
@@ -98,7 +99,7 @@ public class DaemonService extends Service {
 		@Override
 		public void run() {
 			while (true) {
-				Log.d(TAG,"in loop...");
+				Log.d(TAG, "in loop...");
 				// check if screen on
 				boolean isScreenOn = powerManager.isScreenOn();
 				if (isScreenOn) {
@@ -106,12 +107,15 @@ public class DaemonService extends Service {
 					List<RunningTaskInfo> tasks = am.getRunningTasks(100);
 					if (tasks.size() > 0 && mDPM.isAdminActive(mDeviceAdmin)) {
 						String pkgName = tasks.get(0).topActivity.getPackageName();
-						if (!(pkgName.equals("co.in.divi.launcher") || pkgName.equals("co.in.divi") || pkgName
-								.equals("com.android.settings"))) {
-							Intent i = new Intent(DaemonService.this, HomeActivity.class);
-							i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-							startActivity(i);
-							mDPM.lockNow();
+						if (!(pkgName.equals("co.in.divi.launcher") || pkgName.equals("co.in.divi"))) {
+							if (pkgName.equals("com.android.settings")) {
+								if (System.currentTimeMillis() - adminPasswordManager.getLastAuthorizedTime() < Config.SETTINGS_ACCESS_TIME) {
+								} else {
+									lockNow();
+								}
+							} else {
+								lockNow();
+							}
 						}
 					}
 					for (RunningTaskInfo task : tasks) {
@@ -120,12 +124,19 @@ public class DaemonService extends Service {
 					Log.d(TAG, "===============================================================");
 				}
 				try {
-					Thread.sleep(SLEEP_TIME);
+					Thread.sleep(Config.SLEEP_TIME);
 				} catch (InterruptedException e) {
 					Log.d(TAG, "we are interrupted!");
 					break;
 				}
 			}
 		}
+	}
+
+	private void lockNow() {
+		Intent i = new Intent(DaemonService.this, HomeActivity.class);
+		i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		startActivity(i);
+		mDPM.lockNow();
 	}
 }
