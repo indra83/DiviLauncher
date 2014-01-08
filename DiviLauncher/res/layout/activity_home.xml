@@ -10,7 +10,9 @@
         android:id="@+id/version"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#404040" />
+        android:layout_alignParentRight="true"
+        android:layout_margin="@dimen/activity_horizontal_margin"
+        android:textColor="#606060" />
 
     <ImageView
         android:id="@+id/logo"
@@ -51,9 +53,19 @@
         android:id="@+id/settings"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_toRightOf="@+id/crash"
+        android:layout_alignBaseline="@+id/update"
+        android:layout_margin="@dimen/activity_horizontal_margin"
+        android:layout_toLeftOf="@+id/update"
         android:text="Settings" />
+
+    <Button
+        android:id="@+id/update"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_margin="@dimen/activity_horizontal_margin"
+        android:text="Update" />
 
     <Button
         android:id="@+id/lock"

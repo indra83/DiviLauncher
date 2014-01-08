@@ -1,5 +1,14 @@
 package co.in.divi.launcher;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.Shader.TileMode;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -7,9 +16,23 @@ import android.graphics.drawable.Drawable.ConstantState;
 import android.graphics.drawable.DrawableContainer.DrawableContainerState;
 import android.graphics.drawable.LayerDrawable;
 import android.graphics.drawable.StateListDrawable;
+import android.util.Log;
 import android.view.View;
 
 public class Util {
+
+	public static boolean isMyLauncherDefault(Context context) {
+		Intent intent = new Intent(Intent.ACTION_MAIN);
+		intent.addCategory(Intent.CATEGORY_HOME);
+		ResolveInfo resolveInfo = context.getPackageManager().resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY);
+		String currentHomePackage = resolveInfo.activityInfo.packageName;
+		final String myPackageName = context.getPackageName();
+		if (Config.DEBUG) {
+			Log.d(context.getPackageName(), "currentHomePackage:" + currentHomePackage);
+			Log.d(context.getPackageName(), "myPackageName:" + myPackageName);
+		}
+		return currentHomePackage.equals(myPackageName);
+	}
 
 	public static void fixBackgroundRepeat(View view) {
 		Drawable bg = view.getBackground();
@@ -39,6 +62,22 @@ public class Util {
 				}
 			}
 		}
+	}
+
+	public static String getInputString(InputStream is) throws IOException {
+		if (is == null)
+			return "";
+		BufferedReader in = new BufferedReader(new InputStreamReader(is), 8192);
+		String line;
+		StringBuilder sb = new StringBuilder();
+
+		try {
+			while ((line = in.readLine()) != null)
+				sb.append(line);
+		} finally {
+			is.close();
+		}
+		return sb.toString();
 	}
 
 }

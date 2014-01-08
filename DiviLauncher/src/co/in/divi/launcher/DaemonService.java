@@ -3,6 +3,7 @@ package co.in.divi.launcher;
 import java.util.List;
 
 import android.app.ActivityManager;
+import android.app.ActivityManager.RunningServiceInfo;
 import android.app.ActivityManager.RunningTaskInfo;
 import android.app.Notification;
 import android.app.Service;
@@ -99,34 +100,44 @@ public class DaemonService extends Service {
 		@Override
 		public void run() {
 			while (true) {
-				Log.d(TAG, "in loop...");
+				if (Config.DEBUG_DAEMON)
+					Log.d(TAG, "in loop...");
 				// check if screen on
 				boolean isScreenOn = powerManager.isScreenOn();
 				if (isScreenOn) {
 					ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
 					List<RunningTaskInfo> tasks = am.getRunningTasks(100);
 					if (tasks.size() > 0 && mDPM.isAdminActive(mDeviceAdmin)) {
-						String pkgName = tasks.get(0).topActivity.getPackageName();
-						if (!(pkgName.equals("co.in.divi.launcher") || pkgName.equals("co.in.divi"))) {
-							if (pkgName.equals("com.android.settings")) {
-								if (System.currentTimeMillis() - adminPasswordManager.getLastAuthorizedTime() < Config.SETTINGS_ACCESS_TIME) {
-								} else {
-									lockNow();
-								}
-							} else {
+						if (System.currentTimeMillis() - adminPasswordManager.getLastAuthorizedTime() < Config.SETTINGS_ACCESS_TIME) {
+							// disable everything for 2 mins.
+							if (Config.DEBUG_DAEMON)
+								Log.w(TAG, "kiosk mode off!");
+						} else {
+							String pkgName = tasks.get(0).topActivity.getPackageName();
+							if (!(pkgName.equals(Config.APP_DIVI_LAUNCHER) || pkgName.equals(Config.APP_DIVI_MAIN))) {
 								lockNow();
 							}
 						}
 					}
 					for (RunningTaskInfo task : tasks) {
-						Log.d(TAG, "task:" + task.id + ",top:" + task.topActivity.getShortClassName());
+						if (Config.DEBUG_DAEMON)
+							Log.d(TAG, "task:" + task.id + ",top:" + task.topActivity.getPackageName());
 					}
-					Log.d(TAG, "===============================================================");
+					// for (RunningServiceInfo service : am.getRunningServices(100)) {
+					// Log.d(TAG, "service:" + service.service.getClassName() + " - " +
+					// service.service.getPackageName());
+					// if (!service.service.getPackageName().equals(APP_DIVI_LAUNCHER)) {
+					// Log.d(TAG, "killing - " + service.service.getPackageName());
+					// // am.killBackgroundProcesses(service.service.getPackageName());
+					// }
+					// }
+					if (Config.DEBUG_DAEMON)
+						Log.d(TAG, "===============================================================");
 				}
 				try {
 					Thread.sleep(Config.SLEEP_TIME);
 				} catch (InterruptedException e) {
-					Log.d(TAG, "we are interrupted!");
+					Log.w(TAG, "we are interrupted!");
 					break;
 				}
 			}

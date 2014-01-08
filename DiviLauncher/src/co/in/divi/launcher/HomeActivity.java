@@ -47,7 +47,8 @@ public class HomeActivity extends Activity {
 		findViewById(R.id.logo).setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				Log.d(TAG, "launching divi");
+				if (Config.DEBUG)
+					Log.d(TAG, "launching divi");
 				Intent i;
 				PackageManager manager = getPackageManager();
 				try {
@@ -79,6 +80,33 @@ public class HomeActivity extends Activity {
 			@Override
 			public void onClick(View v) {
 				throw new RuntimeException();
+			}
+		});
+		findViewById(R.id.update).setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				final int challenge = new Random().nextInt(10000);
+				final EditText input = new EditText(HomeActivity.this);
+				input.setInputType(InputType.TYPE_CLASS_NUMBER);
+				new AlertDialog.Builder(HomeActivity.this).setTitle("Enter password")
+						.setMessage("Enter the key for challenge: " + challenge).setView(input)
+						.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int whichButton) {
+								int response = Integer.parseInt(input.getText().toString());
+								if (AdminPasswordManager.getInstance().isAuthorized(challenge, response)) {
+									AdminPasswordManager.getInstance().setLastAuthorizedTime(System.currentTimeMillis());
+									Intent i = new Intent();
+									i.setAction("co.in.divi.launcher.DOWNLOAD_APP");
+									startActivity(i);
+								} else {
+									Toast.makeText(HomeActivity.this, "Authorization failed", Toast.LENGTH_SHORT).show();
+								}
+							}
+						}).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int whichButton) {
+								// Do nothing.
+							}
+						}).show();
 			}
 		});
 		findViewById(R.id.settings).setOnClickListener(new View.OnClickListener() {
@@ -145,7 +173,6 @@ public class HomeActivity extends Activity {
 	@Override
 	protected void onStart() {
 		super.onStart();
-		Log.d(TAG, "sending service start intent");
 
 		/************************ DEVELOPMENT ************************/
 		// startService(new Intent(this, DaemonService.class));
@@ -171,7 +198,8 @@ public class HomeActivity extends Activity {
 
 			@Override
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				Log.d(TAG, "trying to change device admin setting");
+				if (Config.DEBUG)
+					Log.d(TAG, "trying to change device admin setting");
 				if (isChecked) {
 					// Launch the activity to have the user enable our admin.
 					Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
@@ -188,11 +216,34 @@ public class HomeActivity extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
+		if (!Util.isMyLauncherDefault(this)) {
+			Toast.makeText(this, "Make Divi the default home screen", Toast.LENGTH_LONG).show();
+			Intent i = new Intent(Intent.ACTION_MAIN);
+			i.addCategory(Intent.CATEGORY_HOME);
+			startActivity(i);
+			finish();
+			// make sure we don't get into infinite lock screen
+			mDPM.removeActiveAdmin(mDeviceAdmin);
+			return;
+		}
 		if (!mDPM.isAdminActive(mDeviceAdmin)) {
 			Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
 			intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, mDeviceAdmin);
 			intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Set Divi Device Administration");
 			startActivity(intent);
+			finish();
 		}
+	}
+
+	@Override
+	public void onWindowFocusChanged(boolean hasFocus) {
+		super.onWindowFocusChanged(hasFocus);
+		int uiOptions = getWindow().getDecorView().getSystemUiVisibility();
+		int newUiOptions = uiOptions | View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+				| View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN;
+		if (Build.VERSION.SDK_INT >= 18) {
+			newUiOptions ^= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+		}
+		getWindow().getDecorView().setSystemUiVisibility(newUiOptions);
 	}
 }
