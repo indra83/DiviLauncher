@@ -1,6 +1,8 @@
 package co.in.divi.launcher;
 
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -9,6 +11,7 @@ import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -26,11 +29,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class HomeActivity extends Activity {
-	private static final String	TAG	= HomeActivity.class.getName();
+	private static final String	TAG		= HomeActivity.class.getName();
 
 	VersionedSettingsManager	settingsManager;
 	DevicePolicyManager			mDPM;
 	ComponentName				mDeviceAdmin;
+
+	Timer						timer	= new Timer();
 
 	/************************ DEVELOPMENT ************************/
 	CheckBox					adb;
@@ -49,18 +54,7 @@ public class HomeActivity extends Activity {
 			public void onClick(View v) {
 				if (Config.DEBUG)
 					Log.d(TAG, "launching divi");
-				Intent i;
-				PackageManager manager = getPackageManager();
-				try {
-					i = manager.getLaunchIntentForPackage("co.in.divi");
-					if (i == null)
-						throw new PackageManager.NameNotFoundException();
-					i.addCategory(Intent.CATEGORY_LAUNCHER);
-					startActivity(i);
-				} catch (PackageManager.NameNotFoundException e) {
-					Log.e(TAG, "error launching divi", e);
-					Toast.makeText(HomeActivity.this, "Error launching Divi", Toast.LENGTH_LONG).show();
-				}
+				launchDivi();
 			}
 		});
 
@@ -85,10 +79,11 @@ public class HomeActivity extends Activity {
 		findViewById(R.id.update).setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				final int challenge = new Random().nextInt(10000);
+				final int challenge = new Random(System.currentTimeMillis()).nextInt(10000);
 				final EditText input = new EditText(HomeActivity.this);
 				input.setInputType(InputType.TYPE_CLASS_NUMBER);
-				new AlertDialog.Builder(HomeActivity.this).setTitle("Enter password")
+				timer.cancel();
+				AlertDialog ad = new AlertDialog.Builder(HomeActivity.this).setTitle("Enter password")
 						.setMessage("Enter the key for challenge: " + challenge).setView(input)
 						.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 							public void onClick(DialogInterface dialog, int whichButton) {
@@ -107,15 +102,28 @@ public class HomeActivity extends Activity {
 								// Do nothing.
 							}
 						}).show();
+				ad.setOnDismissListener(new OnDismissListener() {
+					@Override
+					public void onDismiss(DialogInterface dialog) {
+						timer = new Timer();
+						timer.schedule(new TimerTask() {
+							@Override
+							public void run() {
+								launchDivi();
+							}
+						}, Config.LAUNCH_DIVI_TIMER);
+					}
+				});
 			}
 		});
 		findViewById(R.id.settings).setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				final int challenge = new Random().nextInt(10000);
+				final int challenge = new Random(System.currentTimeMillis()).nextInt(10000);
 				final EditText input = new EditText(HomeActivity.this);
 				input.setInputType(InputType.TYPE_CLASS_NUMBER);
-				new AlertDialog.Builder(HomeActivity.this).setTitle("Enter password")
+				timer.cancel();
+				AlertDialog ad = new AlertDialog.Builder(HomeActivity.this).setTitle("Enter password")
 						.setMessage("Enter the key for challenge: " + challenge).setView(input)
 						.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 							public void onClick(DialogInterface dialog, int whichButton) {
@@ -132,6 +140,18 @@ public class HomeActivity extends Activity {
 								// Do nothing.
 							}
 						}).show();
+				ad.setOnDismissListener(new OnDismissListener() {
+					@Override
+					public void onDismiss(DialogInterface dialog) {
+						timer = new Timer();
+						timer.schedule(new TimerTask() {
+							@Override
+							public void run() {
+								launchDivi();
+							}
+						}, Config.LAUNCH_DIVI_TIMER);
+					}
+				});
 			}
 		});
 		findViewById(R.id.lock).setOnClickListener(new View.OnClickListener() {
@@ -232,6 +252,35 @@ public class HomeActivity extends Activity {
 			intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Set Divi Device Administration");
 			startActivity(intent);
 			finish();
+			return;
+		}
+		timer = new Timer();
+		timer.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				launchDivi();
+			}
+		}, Config.LAUNCH_DIVI_TIMER);
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		timer.cancel();
+	}
+
+	private void launchDivi() {
+		Intent i;
+		PackageManager manager = getPackageManager();
+		try {
+			i = manager.getLaunchIntentForPackage("co.in.divi");
+			if (i == null)
+				throw new PackageManager.NameNotFoundException();
+			i.addCategory(Intent.CATEGORY_LAUNCHER);
+			startActivity(i);
+		} catch (PackageManager.NameNotFoundException e) {
+			Log.e(TAG, "error launching divi", e);
+			Toast.makeText(HomeActivity.this, "Error launching Divi", Toast.LENGTH_LONG).show();
 		}
 	}
 
