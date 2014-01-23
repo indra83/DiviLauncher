@@ -108,14 +108,28 @@ public class DaemonService extends Service {
 					ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
 					List<RunningTaskInfo> tasks = am.getRunningTasks(100);
 					if (tasks.size() > 0 && mDPM.isAdminActive(mDeviceAdmin)) {
-						if (System.currentTimeMillis() - adminPasswordManager.getLastAuthorizedTime() < Config.SETTINGS_ACCESS_TIME) {
+						long diff = System.currentTimeMillis() - adminPasswordManager.getLastAuthorizedTime();
+						// Log.d(TAG, "diff - " + diff);
+						if (diff < Config.SETTINGS_ACCESS_TIME) {
 							// disable everything for 2 mins.
 							if (Config.DEBUG_DAEMON)
 								Log.w(TAG, "kiosk mode off!");
 						} else {
 							String pkgName = tasks.get(0).topActivity.getPackageName();
 							if (!(pkgName.equals(Config.APP_DIVI_LAUNCHER) || pkgName.equals(Config.APP_DIVI_MAIN))) {
-								lockNow();
+								try {
+									Thread.sleep(Config.LOCK_RECHECK_DELAY);
+								} catch (InterruptedException e) {
+									Log.w(TAG, "we are interrupted!", e);
+								}
+								// wait and do the check again to ensure we are not in between transitions.
+								tasks = am.getRunningTasks(100);
+								if (tasks.size() > 0) {
+									pkgName = tasks.get(0).topActivity.getPackageName();
+									if (!(pkgName.equals(Config.APP_DIVI_LAUNCHER) || pkgName.equals(Config.APP_DIVI_MAIN))) {
+										lockNow();
+									}
+								}
 							}
 						}
 					}
@@ -137,7 +151,7 @@ public class DaemonService extends Service {
 				try {
 					Thread.sleep(Config.SLEEP_TIME);
 				} catch (InterruptedException e) {
-					Log.w(TAG, "we are interrupted!");
+					Log.w(TAG, "we are interrupted!", e);
 					break;
 				}
 			}

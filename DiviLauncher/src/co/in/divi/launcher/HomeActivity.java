@@ -16,6 +16,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.text.InputType;
@@ -35,6 +36,7 @@ public class HomeActivity extends Activity {
 	DevicePolicyManager			mDPM;
 	ComponentName				mDeviceAdmin;
 
+	Handler						handler;
 	Timer						timer	= new Timer();
 
 	/************************ DEVELOPMENT ************************/
@@ -44,6 +46,7 @@ public class HomeActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		handler = new Handler();
 		mDPM = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
 		mDeviceAdmin = new ComponentName(this, DiviDeviceAdmin.class);
 		settingsManager = VersionedSettingsManager.newInstance(this);
@@ -95,25 +98,14 @@ public class HomeActivity extends Activity {
 									startActivity(i);
 								} else {
 									Toast.makeText(HomeActivity.this, "Authorization failed", Toast.LENGTH_SHORT).show();
+									resetTimer();
 								}
 							}
 						}).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
 							public void onClick(DialogInterface dialog, int whichButton) {
-								// Do nothing.
+								resetTimer();
 							}
 						}).show();
-				ad.setOnDismissListener(new OnDismissListener() {
-					@Override
-					public void onDismiss(DialogInterface dialog) {
-						timer = new Timer();
-						timer.schedule(new TimerTask() {
-							@Override
-							public void run() {
-								launchDivi();
-							}
-						}, Config.LAUNCH_DIVI_TIMER);
-					}
-				});
 			}
 		});
 		findViewById(R.id.settings).setOnClickListener(new View.OnClickListener() {
@@ -133,25 +125,14 @@ public class HomeActivity extends Activity {
 									startActivity(new Intent(Settings.ACTION_SETTINGS));
 								} else {
 									Toast.makeText(HomeActivity.this, "Authorization failed", Toast.LENGTH_SHORT).show();
+									resetTimer();
 								}
 							}
 						}).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
 							public void onClick(DialogInterface dialog, int whichButton) {
-								// Do nothing.
+								resetTimer();
 							}
 						}).show();
-				ad.setOnDismissListener(new OnDismissListener() {
-					@Override
-					public void onDismiss(DialogInterface dialog) {
-						timer = new Timer();
-						timer.schedule(new TimerTask() {
-							@Override
-							public void run() {
-								launchDivi();
-							}
-						}, Config.LAUNCH_DIVI_TIMER);
-					}
-				});
 			}
 		});
 		findViewById(R.id.lock).setOnClickListener(new View.OnClickListener() {
@@ -254,6 +235,16 @@ public class HomeActivity extends Activity {
 			finish();
 			return;
 		}
+		resetTimer();
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		timer.cancel();
+	}
+
+	private void resetTimer() {
 		timer = new Timer();
 		timer.schedule(new TimerTask() {
 			@Override
@@ -263,25 +254,24 @@ public class HomeActivity extends Activity {
 		}, Config.LAUNCH_DIVI_TIMER);
 	}
 
-	@Override
-	protected void onPause() {
-		super.onPause();
-		timer.cancel();
-	}
-
 	private void launchDivi() {
-		Intent i;
-		PackageManager manager = getPackageManager();
-		try {
-			i = manager.getLaunchIntentForPackage("co.in.divi");
-			if (i == null)
-				throw new PackageManager.NameNotFoundException();
-			i.addCategory(Intent.CATEGORY_LAUNCHER);
-			startActivity(i);
-		} catch (PackageManager.NameNotFoundException e) {
-			Log.e(TAG, "error launching divi", e);
-			Toast.makeText(HomeActivity.this, "Error launching Divi", Toast.LENGTH_LONG).show();
-		}
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				Intent i;
+				PackageManager manager = getPackageManager();
+				try {
+					i = manager.getLaunchIntentForPackage("co.in.divi");
+					if (i == null)
+						throw new PackageManager.NameNotFoundException();
+					i.addCategory(Intent.CATEGORY_LAUNCHER);
+					startActivity(i);
+				} catch (Exception e) {
+					Log.e(TAG, "error launching divi", e);
+					Toast.makeText(HomeActivity.this, "Error launching Divi", Toast.LENGTH_LONG).show();
+				}
+			}
+		});
 	}
 
 	@Override

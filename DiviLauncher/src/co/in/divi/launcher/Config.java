@@ -2,7 +2,7 @@ package co.in.divi.launcher;
 
 public class Config {
 
-	public static final String	VERSION					= "6 Jan 2013";
+	public static final String	VERSION					= "20 Jan 2013";
 
 	public static final boolean	DEBUG					= true;
 	public static final boolean	DEBUG_DAEMON			= false;
@@ -11,8 +11,9 @@ public class Config {
 
 	public static final int		SETTINGS_ACCESS_TIME	= 2 * 60 * 1000;														// 2
 																																// mins
-	public static final int		SLEEP_TIME				= 1 * 1000;															// polling
+	public static final int		SLEEP_TIME				= 800;																	// polling
 																																// interval
+	public static final int		LOCK_RECHECK_DELAY		= 400;
 	public static final int		LAUNCH_DIVI_TIMER		= 3 * 1000;
 
 	// packages
