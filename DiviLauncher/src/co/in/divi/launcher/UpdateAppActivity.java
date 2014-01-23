@@ -9,6 +9,8 @@ import java.io.InputStreamReader;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -56,7 +58,10 @@ public class UpdateAppActivity extends Activity {
 		}
 
 		installTask = new InstallTask();
-		installTask.execute(new String[0]);
+		// installTask.execute(new String[0]);
+		Intent promptInstall = new Intent(Intent.ACTION_VIEW).setDataAndType(Uri.fromFile(apkFile),
+				"application/vnd.android.package-archive");
+		startActivity(promptInstall);
 	}
 
 	@Override
