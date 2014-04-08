@@ -90,7 +90,11 @@ public class HomeActivity extends Activity {
 						.setMessage("Enter the key for challenge: " + challenge).setView(input)
 						.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 							public void onClick(DialogInterface dialog, int whichButton) {
-								int response = Integer.parseInt(input.getText().toString());
+								int response = -1;
+								try {
+									response = Integer.parseInt(input.getText().toString());
+								} catch (Exception e) {
+								}
 								if (AdminPasswordManager.getInstance().isAuthorized(challenge, response)) {
 									AdminPasswordManager.getInstance().setLastAuthorizedTime(System.currentTimeMillis());
 									Intent i = new Intent();
@@ -119,7 +123,11 @@ public class HomeActivity extends Activity {
 						.setMessage("Enter the key for challenge: " + challenge).setView(input)
 						.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 							public void onClick(DialogInterface dialog, int whichButton) {
-								int response = Integer.parseInt(input.getText().toString());
+								int response = -1;
+								try {
+									response = Integer.parseInt(input.getText().toString());
+								} catch (Exception e) {
+								}
 								if (AdminPasswordManager.getInstance().isAuthorized(challenge, response)) {
 									AdminPasswordManager.getInstance().setLastAuthorizedTime(System.currentTimeMillis());
 									startActivity(new Intent(Settings.ACTION_SETTINGS));
