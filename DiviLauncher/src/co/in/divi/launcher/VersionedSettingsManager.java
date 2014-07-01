@@ -19,5 +19,9 @@ public abstract class VersionedSettingsManager {
 	public abstract boolean getADBEnabled();
 	
 	public abstract void setADBEnabled(boolean enabled);
+	
+	public abstract boolean isAutoTime();
+	
+	public abstract boolean isAutoZone();
 
 }

@@ -2,6 +2,8 @@ package co.in.divi.launcher;
 
 import java.util.List;
 
+import co.in.divi.launcher.lockscreen.UnlockScreenActivity;
+
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningServiceInfo;
 import android.app.ActivityManager.RunningTaskInfo;
@@ -41,7 +43,7 @@ public class DaemonService extends Service {
 		mDPM = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
 		mDeviceAdmin = new ComponentName(this, DiviDeviceAdmin.class);
 		adminPasswordManager = AdminPasswordManager.getInstance();
-		// registBroadcastReceiver();
+		registBroadcastReceiver();
 	}
 
 	@Override
@@ -63,7 +65,7 @@ public class DaemonService extends Service {
 	public void onDestroy() {
 		super.onDestroy();
 		daemonThread.interrupt();
-		// unregisterReceiver();
+		unregisterReceiver();
 	}
 
 	private BroadcastReceiver	mPowerKeyReceiver	= null;
@@ -72,15 +74,18 @@ public class DaemonService extends Service {
 		final IntentFilter theFilter = new IntentFilter();
 		/** System Defined Broadcast */
 		theFilter.addAction(Intent.ACTION_SCREEN_ON);
-		theFilter.addAction(Intent.ACTION_SCREEN_OFF);
+		// theFilter.addAction(Intent.ACTION_SCREEN_OFF);
 
 		mPowerKeyReceiver = new BroadcastReceiver() {
 			@Override
 			public void onReceive(Context context, Intent intent) {
 				String strAction = intent.getAction();
-
-				if (strAction.equals(Intent.ACTION_SCREEN_OFF) || strAction.equals(Intent.ACTION_SCREEN_ON)) {
-					// > Your playground~!
+				Log.d(TAG, "got event!!");
+				if (strAction.equals(Intent.ACTION_SCREEN_OFF)) {
+					Log.d(TAG, "screen off");
+				} else if (strAction.equals(Intent.ACTION_SCREEN_ON)) {
+					Log.d(TAG, "screen on");
+					showLockScreen();
 				}
 			}
 		};
@@ -94,6 +99,12 @@ public class DaemonService extends Service {
 		} catch (IllegalArgumentException e) {
 			mPowerKeyReceiver = null;
 		}
+	}
+
+	private void showLockScreen() {
+		Intent intent = new Intent(this, UnlockScreenActivity.class);
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_USER_ACTION);
+		startActivity(intent);
 	}
 
 	class DaemonThread extends Thread {
