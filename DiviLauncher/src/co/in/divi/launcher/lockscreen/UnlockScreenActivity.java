@@ -25,11 +25,11 @@ public class UnlockScreenActivity extends Activity {
 														public void run() {
 															try {
 																Log.d(TAG, "locking now!");
+																finish();
 																((DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE))
 																		.lockNow();
 															} catch (Exception e) {
 																Log.w(TAG, "error locking!	", e);
-																finish();
 															}
 														}
 													};

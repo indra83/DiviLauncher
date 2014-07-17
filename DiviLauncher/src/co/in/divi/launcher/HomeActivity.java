@@ -1,5 +1,6 @@
 package co.in.divi.launcher;
 
+import java.util.List;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -12,6 +13,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Build;
@@ -198,6 +200,20 @@ public class HomeActivity extends Activity {
 	protected void onStart() {
 		super.onStart();
 
+		/**** TEMP!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
+		// final PackageManager pm = getPackageManager();
+		// // get a list of installed apps.
+		// List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+		//
+		// for (ApplicationInfo packageInfo : packages) {
+		// Log.d(TAG, "Installed package :" + packageInfo.packageName);
+		// Log.d(TAG, "Source dir : " + packageInfo.sourceDir);
+		// Log.d(TAG, "Launch Activity :" + pm.getLaunchIntentForPackage(packageInfo.packageName));
+		// boolean isSysP = ((packageInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0) ? true : false;
+		// Log.d(TAG, "is system package: " + isSysP);
+		// }
+		/**** end TEMP!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
+
 		/************************ DEVELOPMENT ************************/
 		// startService(new Intent(this, DaemonService.class));
 		adb.setOnCheckedChangeListener(null);
@@ -242,12 +258,12 @@ public class HomeActivity extends Activity {
 			} else {
 				statusTextBuilder.append("ADB  : <font color='green'>Ok</font><br/>");
 			}
-			if(settingsManager.isAutoTime() && !settingsManager.isAutoZone()) {
+			if (settingsManager.isAutoTime() && !settingsManager.isAutoZone()) {
 				statusTextBuilder.append("Time : <font color='green'>Ok</font><br/>");
 			} else {
 				statusTextBuilder.append("Time : <font color='red'>Off!</font><br/>");
 			}
-			
+
 			((TextView) findViewById(R.id.status)).setText(Html.fromHtml(statusTextBuilder.toString()));
 		} catch (Exception e) {
 			Log.w(TAG, "error showing status text", e);
@@ -314,6 +330,16 @@ public class HomeActivity extends Activity {
 				} catch (Exception e) {
 					Log.e(TAG, "error launching divi", e);
 					Toast.makeText(HomeActivity.this, "Error launching Divi", Toast.LENGTH_LONG).show();
+					try {
+						i = manager.getLaunchIntentForPackage("co.in.divi");
+						if (i == null)
+							throw new PackageManager.NameNotFoundException();
+						i.addCategory(Intent.CATEGORY_LAUNCHER);
+						startActivity(i);
+					} catch (Exception e2) {
+						Log.e(TAG, "error launching divi (second time)", e);
+						timer.cancel();// don't try again
+					}
 				}
 			}
 		});

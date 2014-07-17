@@ -85,6 +85,15 @@ public class DaemonService extends Service {
 					Log.d(TAG, "screen off");
 				} else if (strAction.equals(Intent.ACTION_SCREEN_ON)) {
 					Log.d(TAG, "screen on");
+					ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+					List<RunningTaskInfo> tasks = am.getRunningTasks(100);
+					if (tasks.size() > 0) {
+						String activityName = tasks.get(0).topActivity.flattenToString();
+						Log.d(TAG, "top act: " + activityName);
+						// ignore if its notification activity..
+						if (activityName.equalsIgnoreCase("co.in.divi/co.in.divi.activity.InstructionNotificationActivity"))
+							return;
+					}
 					showLockScreen();
 				}
 			}
