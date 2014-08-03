@@ -1,5 +1,6 @@
 package co.in.divi.launcher.lockscreen;
 
+import co.in.divi.launcher.DaemonService;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
@@ -11,6 +12,7 @@ public class UnlockBroadcastReceiver extends android.content.BroadcastReceiver {
 	public void onReceive(Context context, Intent intent) {
 		Log.d("Boot complete", "on boot complete! - locking screen");
 		showLockScreen(context);
+		context.startService(new Intent(context, DaemonService.class));
 	}
 
 	private void showLockScreen(Context context) {

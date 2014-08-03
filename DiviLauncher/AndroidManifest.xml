@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="co.in.divi.launcher"
-    android:versionCode="21"
-    android:versionName="v1.0 (1 July - Dawn)" >
+    android:versionCode="22"
+    android:versionName="v1.1 (1 Aug - Dawn)" >
 
     <uses-sdk
         android:minSdkVersion="14"
@@ -19,6 +19,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:allowBackup="true"
@@ -75,8 +76,8 @@
         <service android:name="co.in.divi.launcher.DaemonService" >
         </service>
 
-        <receiver android:name="co.in.divi.launcher.lockscreen.UnlockScreenActivity" >
-            <intent-filter>
+        <receiver android:name="co.in.divi.launcher.lockscreen.UnlockBroadcastReceiver" >
+            <intent-filter android:priority="1000" >
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>

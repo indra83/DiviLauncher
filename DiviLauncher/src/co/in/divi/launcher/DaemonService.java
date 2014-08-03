@@ -2,10 +2,7 @@ package co.in.divi.launcher;
 
 import java.util.List;
 
-import co.in.divi.launcher.lockscreen.UnlockScreenActivity;
-
 import android.app.ActivityManager;
-import android.app.ActivityManager.RunningServiceInfo;
 import android.app.ActivityManager.RunningTaskInfo;
 import android.app.Notification;
 import android.app.Service;
@@ -19,6 +16,7 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import co.in.divi.launcher.lockscreen.UnlockScreenActivity;
 
 public class DaemonService extends Service {
 	private static final String	TAG				= DaemonService.class.getName();

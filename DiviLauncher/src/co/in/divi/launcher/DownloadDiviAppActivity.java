@@ -105,8 +105,11 @@ public class DownloadDiviAppActivity extends Activity {
 					url = new URL(updateDescription.apkUrl);
 					c = (HttpURLConnection) url.openConnection();
 					c.setRequestMethod("GET");
-					c.setDoOutput(true);
+					c.setRequestProperty("User-Agent",
+							"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-GB;     rv:1.9.2.13) Gecko/20101203 Firefox/3.6.13 (.NET CLR 3.5.30729)");
+
 					c.connect();
+					Log.d(TAG, "code: " + c.getResponseCode());
 					is = c.getInputStream();
 					byte[] buffer = new byte[1024 * 8];
 					int len1 = 0;
