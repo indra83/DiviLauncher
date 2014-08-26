@@ -2,17 +2,15 @@ package co.in.divi.launcher;
 
 public class Config {
 
-	public static final String	VERSION						= "5 Feb 2014";
-
 	public static final boolean	DEBUG						= true;
 	public static final boolean	DEBUG_DAEMON				= false;
 
-	public static final String	APP_UPDATE_URL				= "https://dl.dropboxusercontent.com/u/5474079/dawn/divi_app_update.json";
+	public static final String	APP_UPDATE_URL				= "https://dl.dropboxusercontent.com/u/5474079/public/divi_app_update.json";
 
-	public static final int		SETTINGS_ACCESS_TIME		= 2 * 60 * 1000;															// 2
-																																		// mins
-	public static final int		SLEEP_TIME					= 600;																		// polling
-																																		// interval
+	public static final int		SETTINGS_ACCESS_TIME		= 2 * 60 * 1000;																// 2
+																																			// mins
+	public static final int		SLEEP_TIME					= 600;																			// polling
+																																			// interval
 	public static final int		LOCK_RECHECK_DELAY			= 400;
 	public static final int		LAUNCH_DIVI_TIMER			= 3 * 1000;
 	public static final int		UNLOCK_SCREEN_RELOCK_DELAY	= 3 * 1000;

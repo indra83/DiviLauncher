@@ -173,8 +173,6 @@ public class HomeActivity extends Activity {
 		adb = (CheckBox) findViewById(R.id.adb);
 		admin = (CheckBox) findViewById(R.id.admin);
 
-		((TextView) findViewById(R.id.version)).setText(Config.VERSION);
-
 		// hide all
 		if (true) {
 			findViewById(R.id.reboot).setVisibility(View.GONE);
