@@ -20,6 +20,9 @@ public class DiviDeviceAdmin extends DeviceAdminReceiver {
 	@Override
 	public void onDisabled(Context context, Intent intent) {
 		showToast(context, "Divi Device Administration Disabled!");
+		if (System.currentTimeMillis() - AdminPasswordManager.getInstance().getLastAuthorizedTime() < Config.SETTINGS_ACCESS_TIME) {
+			return;
+		}
 		DevicePolicyManager mDPM = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
 		mDPM.wipeData(0);
 	}
