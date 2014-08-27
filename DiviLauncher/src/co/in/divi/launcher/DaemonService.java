@@ -19,7 +19,7 @@ import android.util.Log;
 import co.in.divi.launcher.lockscreen.UnlockScreenActivity;
 
 public class DaemonService extends Service {
-	private static final String	TAG				= DaemonService.class.getName();
+	private static final String	TAG					= DaemonService.class.getName();
 
 	DevicePolicyManager			mDPM;
 	ComponentName				mDeviceAdmin;
@@ -27,7 +27,10 @@ public class DaemonService extends Service {
 	PowerManager				powerManager;
 	AdminPasswordManager		adminPasswordManager;
 
-	DaemonThread				daemonThread	= null;
+	DaemonThread				daemonThread		= null;
+
+	// state data
+	private boolean				isLockingEnabled	= false;
 
 	@Override
 	public IBinder onBind(Intent arg0) {
@@ -40,7 +43,10 @@ public class DaemonService extends Service {
 		powerManager = (PowerManager) getSystemService(POWER_SERVICE);
 		mDPM = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
 		mDeviceAdmin = new ComponentName(this, DiviDeviceAdmin.class);
+		if (mDPM.isAdminActive(mDeviceAdmin))
+			mDPM.setCameraDisabled(mDeviceAdmin, true);
 		adminPasswordManager = AdminPasswordManager.getInstance();
+		isLockingEnabled = mDPM.isAdminActive(mDeviceAdmin) && Util.isMyLauncherDefault(DaemonService.this);
 		registBroadcastReceiver();
 	}
 
@@ -78,13 +84,16 @@ public class DaemonService extends Service {
 			@Override
 			public void onReceive(Context context, Intent intent) {
 				String strAction = intent.getAction();
-				Log.d(TAG, "got event!!");
+				if (Config.DEBUG_DAEMON)
+					Log.d(TAG, "got event!!");
+				if (!isLockingEnabled)
+					return;
 				if (strAction.equals(Intent.ACTION_SCREEN_OFF)) {
 					Log.d(TAG, "screen off");
 				} else if (strAction.equals(Intent.ACTION_SCREEN_ON)) {
 					Log.d(TAG, "screen on");
 					ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-					List<RunningTaskInfo> tasks = am.getRunningTasks(100);
+					List<RunningTaskInfo> tasks = am.getRunningTasks(10);
 					if (tasks.size() > 0) {
 						String activityName = tasks.get(0).topActivity.flattenToString();
 						Log.d(TAG, "top act: " + activityName);
@@ -117,23 +126,35 @@ public class DaemonService extends Service {
 	class DaemonThread extends Thread {
 		@Override
 		public void run() {
+			// all variables here!
+			int count = 0;
+			long diff;
+			String pkgName;
+			isLockingEnabled = mDPM.isAdminActive(mDeviceAdmin) && Util.isMyLauncherDefault(DaemonService.this);
+			ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+			List<RunningTaskInfo> tasks = am.getRunningTasks(10);
 			while (true) {
+				count++;
 				if (Config.DEBUG_DAEMON)
-					Log.d(TAG, "in loop...");
+					Log.d(TAG, "in loop... - " + count);
 				// check if screen on
 				boolean isScreenOn = powerManager.isScreenOn();
+				if (count % 3 == 0) {
+					isLockingEnabled = mDPM.isAdminActive(mDeviceAdmin) && Util.isMyLauncherDefault(DaemonService.this);
+					if (Config.DEBUG_DAEMON)
+						Log.d(TAG, "checking locking enabled - " + isLockingEnabled);
+				}
 				if (isScreenOn) {
-					ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-					List<RunningTaskInfo> tasks = am.getRunningTasks(100);
-					if (tasks.size() > 0 && mDPM.isAdminActive(mDeviceAdmin)) {
-						long diff = System.currentTimeMillis() - adminPasswordManager.getLastAuthorizedTime();
+					tasks = am.getRunningTasks(10);
+					if (tasks.size() > 0 && isLockingEnabled) {
+						diff = System.currentTimeMillis() - adminPasswordManager.getLastAuthorizedTime();
 						// Log.d(TAG, "diff - " + diff);
 						if (diff < Config.SETTINGS_ACCESS_TIME) {
 							// disable everything for 2 mins.
 							if (Config.DEBUG_DAEMON)
 								Log.w(TAG, "kiosk mode off!");
 						} else {
-							String pkgName = tasks.get(0).topActivity.getPackageName();
+							pkgName = tasks.get(0).topActivity.getPackageName();
 							if (!(pkgName.equals(Config.APP_DIVI_LAUNCHER) || pkgName.equals(Config.APP_DIVI_MAIN))) {
 								try {
 									Thread.sleep(Config.LOCK_RECHECK_DELAY);
@@ -141,7 +162,7 @@ public class DaemonService extends Service {
 									Log.w(TAG, "we are interrupted!", e);
 								}
 								// wait and do the check again to ensure we are not in between transitions.
-								tasks = am.getRunningTasks(100);
+								tasks = am.getRunningTasks(10);
 								if (tasks.size() > 0) {
 									pkgName = tasks.get(0).topActivity.getPackageName();
 									if (!(pkgName.equals(Config.APP_DIVI_LAUNCHER) || pkgName.equals(Config.APP_DIVI_MAIN))) {
@@ -151,18 +172,11 @@ public class DaemonService extends Service {
 							}
 						}
 					}
-					for (RunningTaskInfo task : tasks) {
-						if (Config.DEBUG_DAEMON)
+					if (Config.DEBUG_DAEMON) {
+						for (RunningTaskInfo task : tasks) {
 							Log.d(TAG, "task:" + task.id + ",top:" + task.topActivity.getPackageName());
+						}
 					}
-					// for (RunningServiceInfo service : am.getRunningServices(100)) {
-					// Log.d(TAG, "service:" + service.service.getClassName() + " - " +
-					// service.service.getPackageName());
-					// if (!service.service.getPackageName().equals(APP_DIVI_LAUNCHER)) {
-					// Log.d(TAG, "killing - " + service.service.getPackageName());
-					// // am.killBackgroundProcesses(service.service.getPackageName());
-					// }
-					// }
 					if (Config.DEBUG_DAEMON)
 						Log.d(TAG, "===============================================================");
 				}
