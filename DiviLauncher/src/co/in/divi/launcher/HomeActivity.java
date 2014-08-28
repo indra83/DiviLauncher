@@ -27,16 +27,18 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class HomeActivity extends Activity {
-	private static final String	TAG		= HomeActivity.class.getName();
+	private static final String	TAG			= HomeActivity.class.getName();
 
 	VersionedSettingsManager	settingsManager;
 	DevicePolicyManager			mDPM;
 	ComponentName				mDeviceAdmin;
 
 	Handler						handler;
-	Timer						timer	= new Timer();
+	Timer						timer		= new Timer();
 
 	AlertDialog					settingsAD, updateAD;
+
+	int							backCount	= 0;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -121,6 +123,13 @@ public class HomeActivity extends Activity {
 			Log.w(TAG, "error getting version name", e);
 		}
 		((TextView) findViewById(R.id.version)).setText(versionName);
+	}
+
+	@Override
+	public void onBackPressed() {
+		backCount++;
+		if (backCount % 10 == 3)
+			Toast.makeText(this, ":-)", Toast.LENGTH_SHORT).show();
 	}
 
 	@Override

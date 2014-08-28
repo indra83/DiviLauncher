@@ -16,7 +16,7 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 public class DaemonService extends Service {
-	private static final String	TAG					= DaemonService.class.getName();
+	private static final String	TAG				= DaemonService.class.getName();
 
 	DevicePolicyManager			mDPM;
 	ComponentName				mDeviceAdmin;
@@ -24,10 +24,7 @@ public class DaemonService extends Service {
 	PowerManager				powerManager;
 	AdminPasswordManager		adminPasswordManager;
 
-	DaemonThread				daemonThread		= null;
-
-	// state data
-	private boolean				isLockingEnabled	= false;
+	DaemonThread				daemonThread	= null;
 
 	@Override
 	public IBinder onBind(Intent arg0) {
@@ -43,7 +40,6 @@ public class DaemonService extends Service {
 		if (mDPM.isAdminActive(mDeviceAdmin))
 			mDPM.setCameraDisabled(mDeviceAdmin, true);
 		adminPasswordManager = AdminPasswordManager.getInstance();
-		isLockingEnabled = mDPM.isAdminActive(mDeviceAdmin) && Util.isMyLauncherDefault(DaemonService.this);
 		// registBroadcastReceiver();
 	}
 
@@ -70,6 +66,11 @@ public class DaemonService extends Service {
 	}
 
 	class DaemonThread extends Thread {
+
+		// state data
+		private boolean	isLockingEnabled		= false;
+		private long	suspiciousActivityStart	= 0L;
+
 		@Override
 		public void run() {
 			// all variables here!
@@ -84,7 +85,7 @@ public class DaemonService extends Service {
 				if (Config.DEBUG_DAEMON)
 					Log.d(TAG, "in loop... - " + count);
 				// check if screen on
-				if (count % 3 == 0) {
+				if (count % 30 == 0) {
 					isLockingEnabled = mDPM.isAdminActive(mDeviceAdmin) && Util.isMyLauncherDefault(DaemonService.this);
 					if (Config.DEBUG_DAEMON)
 						Log.d(TAG, "checking locking enabled - " + isLockingEnabled);
@@ -110,10 +111,13 @@ public class DaemonService extends Service {
 								if (pkgName.equals(Config.APP_INSTALLER) && adminPasswordManager.ignoreInstaller()) {
 									// ignore installer - must be installing/updating divi
 								} else {
+									suspiciousActivityStart = System.currentTimeMillis();
 									lockNow();
 									try {
 										for (RunningTaskInfo rt : tasks) {
 											Log.d(TAG, "killing:" + rt.topActivity.getPackageName());
+											if (rt.topActivity.getPackageName().equals(Config.APP_DIVI_LAUNCHER))
+												continue;
 											am.killBackgroundProcesses(rt.topActivity.getPackageName());
 										}
 									} catch (Exception e) {
@@ -123,6 +127,7 @@ public class DaemonService extends Service {
 							}
 						}
 					}
+					// print
 					if (Config.DEBUG_DAEMON) {
 						for (RunningTaskInfo task : tasks) {
 							Log.d(TAG, "task:" + task.id + ",top:" + task.topActivity.getPackageName());
@@ -130,9 +135,19 @@ public class DaemonService extends Service {
 					}
 					if (Config.DEBUG_DAEMON)
 						Log.d(TAG, "===============================================================");
+					// print
 				}
 				try {
-					Thread.sleep(Config.SLEEP_TIME);
+					if (System.currentTimeMillis() - suspiciousActivityStart < Config.SUSPICIOUS_ACTIVITY_ALERT_TIME) {
+						if (Config.DEBUG_DAEMON)
+							Log.d(TAG, "small sleep");
+						Thread.sleep(Config.SLEEP_TIME_SHORT);
+					} else {
+						if (Config.DEBUG_DAEMON)
+							Log.d(TAG, "long sleep");
+						Thread.sleep(Config.SLEEP_TIME_LONG);
+					}
+
 				} catch (InterruptedException e) {
 					Log.w(TAG, "we are interrupted!", e);
 					break;

@@ -64,6 +64,11 @@
         <service android:name="co.in.divi.launcher.DaemonService" >
         </service>
 
+        <receiver android:name="co.in.divi.launcher.lockscreen.UnlockBroadcastReceiver" >
+            <intent-filter android:priority="1000" >
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
         <receiver android:name="co.in.divi.launcher.LockChecker" >
         </receiver>
         <receiver

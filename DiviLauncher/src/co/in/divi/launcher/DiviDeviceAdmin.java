@@ -40,14 +40,13 @@ public class DiviDeviceAdmin extends DeviceAdminReceiver {
 	@Override
 	public CharSequence onDisableRequested(Context context, Intent intent) {
 		showToast(context, "Divi Device Administration - about to be disabled!");
-		// if (System.currentTimeMillis() - AdminPasswordManager.getInstance().getLastAuthorizedTime() <
-		// Config.SETTINGS_ACCESS_TIME) {
-		// return "Go Divi!";
-		// }
+		if (System.currentTimeMillis() - AdminPasswordManager.getInstance().getLastAuthorizedTime() < Config.SETTINGS_ACCESS_TIME) {
+			return "Go - Divi!";
+		}
 		Intent i = new Intent(context, WipeActivity.class);
 		i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		context.startActivity(i);
-		return "Warning! Divi will be uninstalled!";
+		return "Warning! - Continuing will wipe your device and remove Divi. Please contact your school principal to install Divi again!";
 	}
 
 }
