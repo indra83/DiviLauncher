@@ -14,8 +14,14 @@ public class AdminPasswordManager {
 
 	private long	timestamp;
 
+	private long	installerIgnoreStartTime;
+
+	private boolean	triedUpdating;
+
 	private AdminPasswordManager() {
 		timestamp = 0L;
+		installerIgnoreStartTime = 0L;
+		triedUpdating = false;
 	}
 
 	public boolean isAuthorized(int challenge, int response) {
@@ -28,6 +34,22 @@ public class AdminPasswordManager {
 
 	public long getLastAuthorizedTime() {
 		return timestamp;
+	}
+
+	public void setInstallerIgnoreStartTime() {
+		installerIgnoreStartTime = System.currentTimeMillis();
+	}
+
+	public boolean ignoreInstaller() {
+		return System.currentTimeMillis() - installerIgnoreStartTime < Config.INSTALLER_ALLOW_DURATION;
+	}
+
+	public boolean hasTriedUpdating() {
+		return triedUpdating;
+	}
+
+	public void setTriedUpdating() {
+		triedUpdating = true;
 	}
 
 }

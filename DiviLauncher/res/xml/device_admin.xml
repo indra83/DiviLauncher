@@ -18,6 +18,10 @@
 <device-admin xmlns:android="http://schemas.android.com/apk/res/android" >
 
     <uses-policies>
+        <reset-password />
+        
+        <limit-password />
+        
         <force-lock />
 
         <wipe-data />

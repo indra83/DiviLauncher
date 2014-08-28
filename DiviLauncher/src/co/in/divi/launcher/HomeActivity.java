@@ -1,11 +1,9 @@
 package co.in.divi.launcher;
 
-import java.util.List;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.admin.DevicePolicyManager;
@@ -13,22 +11,17 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.PowerManager;
 import android.provider.Settings;
 import android.text.Html;
 import android.text.InputFilter;
 import android.text.InputType;
 import android.util.Log;
 import android.view.View;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -42,10 +35,6 @@ public class HomeActivity extends Activity {
 
 	Handler						handler;
 	Timer						timer	= new Timer();
-
-	/************************ DEVELOPMENT ************************/
-	CheckBox					adb;
-	CheckBox					admin;
 
 	AlertDialog					settingsAD, updateAD;
 
@@ -67,56 +56,27 @@ public class HomeActivity extends Activity {
 			}
 		});
 
-		Util.fixBackgroundRepeat(findViewById(R.id.root));
+		try {
+			Util.fixBackgroundRepeat(findViewById(R.id.root));
+		} catch (Exception e) {
+			Log.w(TAG, "not important!", e);
+		}
 
 		// set alram
 		LockChecker.scheduleAlarms(this);
 
-		/************************ DEVELOPMENT ************************/
-		findViewById(R.id.reboot).setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				((PowerManager) getSystemService(POWER_SERVICE)).reboot("divi");
-			}
-		});
-		findViewById(R.id.crash).setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				throw new RuntimeException();
-			}
-		});
 		findViewById(R.id.update).setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				final int challenge = new Random(System.currentTimeMillis()).nextInt(10000);
-				final EditText input = new EditText(HomeActivity.this);
-				input.setInputType(InputType.TYPE_CLASS_NUMBER);
-				input.setFilters(new InputFilter[] { new InputFilter.LengthFilter(5) });
-				timer.cancel();
-				updateAD = new AlertDialog.Builder(HomeActivity.this).setTitle("Enter password")
-						.setMessage("Enter the key for challenge: " + challenge).setView(input)
-						.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-							public void onClick(DialogInterface dialog, int whichButton) {
-								int response = -1;
-								try {
-									response = Integer.parseInt(input.getText().toString());
-								} catch (Exception e) {
-								}
-								if (AdminPasswordManager.getInstance().isAuthorized(challenge, response)) {
-									AdminPasswordManager.getInstance().setLastAuthorizedTime(System.currentTimeMillis());
-									Intent i = new Intent();
-									i.setAction("co.in.divi.launcher.DOWNLOAD_APP");
-									startActivity(i);
-								} else {
-									Toast.makeText(HomeActivity.this, "Authorization failed", Toast.LENGTH_SHORT).show();
-									resetTimer();
-								}
-							}
-						}).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-							public void onClick(DialogInterface dialog, int whichButton) {
-								resetTimer();
-							}
-						}).show();
+				if (AdminPasswordManager.getInstance().hasTriedUpdating()) {
+					if (mDPM.isAdminActive(mDeviceAdmin))
+						mDPM.lockNow();
+					return;
+				}
+				AdminPasswordManager.getInstance().setTriedUpdating();
+				Intent i = new Intent();
+				i.setAction("co.in.divi.launcher.DOWNLOAD_APP");
+				startActivity(i);
 			}
 		});
 		findViewById(R.id.settings).setOnClickListener(new View.OnClickListener() {
@@ -140,6 +100,8 @@ public class HomeActivity extends Activity {
 									AdminPasswordManager.getInstance().setLastAuthorizedTime(System.currentTimeMillis());
 									startActivity(new Intent(Settings.ACTION_SETTINGS));
 								} else {
+									if (mDPM.isAdminActive(mDeviceAdmin))
+										mDPM.lockNow();
 									Toast.makeText(HomeActivity.this, "Authorization failed", Toast.LENGTH_SHORT).show();
 									resetTimer();
 								}
@@ -151,40 +113,7 @@ public class HomeActivity extends Activity {
 						}).show();
 			}
 		});
-		findViewById(R.id.lock).setOnClickListener(new View.OnClickListener() {
-			@SuppressLint("NewApi")
-			@Override
-			public void onClick(View v) {
-				mDPM.setCameraDisabled(mDeviceAdmin, true);
-				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1)
-					mDPM.setKeyguardDisabledFeatures(mDeviceAdmin, DevicePolicyManager.KEYGUARD_DISABLE_FEATURES_ALL);
-				mDPM.lockNow();
-			}
-		});
-		findViewById(R.id.gallery).setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				Intent i = new Intent(Intent.ACTION_PICK);
-				i.setType("image/*");
-				startActivity(i);
-			}
-		});
 
-		adb = (CheckBox) findViewById(R.id.adb);
-		admin = (CheckBox) findViewById(R.id.admin);
-
-		// hide all
-		if (true) {
-			findViewById(R.id.reboot).setVisibility(View.GONE);
-			findViewById(R.id.crash).setVisibility(View.GONE);
-			findViewById(R.id.settings).setVisibility(View.VISIBLE);
-			findViewById(R.id.lock).setVisibility(View.GONE);
-			findViewById(R.id.gallery).setVisibility(View.GONE);
-			findViewById(R.id.adb).setVisibility(View.GONE);
-			findViewById(R.id.admin).setVisibility(View.GONE);
-		}
-
-		// show version
 		String versionName = "--";
 		try {
 			versionName = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
@@ -212,43 +141,6 @@ public class HomeActivity extends Activity {
 		// }
 		/**** end TEMP!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
 
-		/************************ DEVELOPMENT ************************/
-		// startService(new Intent(this, DaemonService.class));
-		adb.setOnCheckedChangeListener(null);
-		if (settingsManager.getADBEnabled())
-			adb.setChecked(true);
-		else
-			adb.setChecked(false);
-		adb.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-
-			@Override
-			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				Log.d(TAG, "trying to change settings");
-				settingsManager.setADBEnabled(isChecked);
-			}
-		});
-		admin.setOnCheckedChangeListener(null);
-		if (mDPM.isAdminActive(mDeviceAdmin))
-			admin.setChecked(true);
-		else
-			admin.setChecked(false);
-		admin.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-
-			@Override
-			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				if (Config.DEBUG)
-					Log.d(TAG, "trying to change device admin setting");
-				if (isChecked) {
-					// Launch the activity to have the user enable our admin.
-					Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
-					intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, mDeviceAdmin);
-					intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Set Divi Device Administration");
-					startActivity(intent);
-				} else {
-					mDPM.removeActiveAdmin(mDeviceAdmin);
-				}
-			}
-		});
 		try {
 			StringBuilder statusTextBuilder = new StringBuilder();
 			if (settingsManager.getADBEnabled()) {

@@ -9,7 +9,6 @@ import java.net.URL;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -26,7 +25,6 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
-import com.stericson.RootTools.RootTools;
 
 public class DownloadDiviAppActivity extends Activity {
 	private static final String	TAG				= DownloadDiviAppActivity.class.getName();
@@ -83,46 +81,58 @@ public class DownloadDiviAppActivity extends Activity {
 
 		@Override
 		protected Integer doInBackground(Void... params) {
-			if (apkFile.exists())
-				apkFile.delete();
-			apkFile.getParentFile().mkdirs();
 			try {
-				URL url = new URL(Config.APP_UPDATE_URL);
-				HttpURLConnection c = (HttpURLConnection) url.openConnection();
-				c.setRequestMethod("GET");
-				c.setDoOutput(true);
-				c.connect();
-
-				InputStream is = c.getInputStream();
-
-				String response = Util.getInputString(is);
-				Log.d(TAG, response);
-				AppUpdateDescription updateDescription = new Gson().fromJson(response, AppUpdateDescription.class);
-
-				if (updateDescription.versionCode > versionCode) {
-					publishProgress("Found new apk, downloading...");
-					FileOutputStream fos = new FileOutputStream(apkFile);
-					url = new URL(updateDescription.apkUrl);
-					c = (HttpURLConnection) url.openConnection();
+				if (apkFile.exists())
+					apkFile.delete();
+				apkFile.getParentFile().mkdirs();
+				try {
+					URL url = new URL(Config.APP_UPDATE_URL);
+					HttpURLConnection c = (HttpURLConnection) url.openConnection();
 					c.setRequestMethod("GET");
-					c.setRequestProperty("User-Agent",
-							"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-GB;     rv:1.9.2.13) Gecko/20101203 Firefox/3.6.13 (.NET CLR 3.5.30729)");
-
+					c.setConnectTimeout(3000);
+					c.setReadTimeout(3000);
 					c.connect();
-					Log.d(TAG, "code: " + c.getResponseCode());
-					is = c.getInputStream();
-					byte[] buffer = new byte[1024 * 8];
-					int len1 = 0;
-					while ((len1 = is.read(buffer)) != -1) {
-						fos.write(buffer, 0, len1);
-						Log.d(TAG, " read " + len1);
+
+					InputStream is = c.getInputStream();
+
+					String response = Util.getInputString(is);
+					Log.d(TAG, response);
+					AppUpdateDescription updateDescription = new Gson().fromJson(response, AppUpdateDescription.class);
+
+					if (updateDescription.versionCode > versionCode) {
+						publishProgress("Found new apk, downloading...");
+						FileOutputStream fos = new FileOutputStream(apkFile);
+						url = new URL(updateDescription.apkUrl);
+						c = (HttpURLConnection) url.openConnection();
+						c.setConnectTimeout(3000);
+						c.setReadTimeout(3000);
+						c.setRequestMethod("GET");
+						c.setRequestProperty("User-Agent",
+								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-GB;     rv:1.9.2.13) Gecko/20101203 Firefox/3.6.13 (.NET CLR 3.5.30729)");
+
+						c.connect();
+						Log.d(TAG, "code: " + c.getResponseCode());
+						is = c.getInputStream();
+						byte[] buffer = new byte[1024 * 8];
+						int len1 = 0;
+						int total = 0;
+						while ((len1 = is.read(buffer)) != -1) {
+							fos.write(buffer, 0, len1);
+							total += len1;
+							Log.d(TAG, " read so far - " + total);
+							publishProgress("Downloaded " + (total / 1024) + " KB");
+						}
+						fos.close();
+						c.disconnect();
+						return 0;
+					} else {
+						return 1;
 					}
-					fos.close();
-					return 0;
-				} else {
-					return 1;
+				} catch (IOException e) {
+					Log.w(TAG, "error downloading update apk", e);
+					return 2;
 				}
-			} catch (IOException e) {
+			} catch (Exception e) {
 				Log.w(TAG, "error downloading update apk", e);
 				return 2;
 			}
@@ -131,7 +141,7 @@ public class DownloadDiviAppActivity extends Activity {
 		@Override
 		protected void onProgressUpdate(String... values) {
 			super.onProgressUpdate(values);
-			Toast.makeText(DownloadDiviAppActivity.this, values[0], Toast.LENGTH_LONG).show();
+			pd.setMessage(values[0]);
 		}
 
 		@Override
@@ -147,18 +157,10 @@ public class DownloadDiviAppActivity extends Activity {
 				Toast.makeText(DownloadDiviAppActivity.this, "Error downloading apk?", Toast.LENGTH_LONG).show();
 				return;
 			}
-			if (RootTools.isAccessGiven()) {
-				try {
-					Intent i = new Intent();
-					i.setAction("co.in.divi.launcher.UPDATE_APP");
-					i.putExtra("path", apkFile.getAbsolutePath());
-					startActivity(i);
-					return;
-				} catch (ActivityNotFoundException anfe) {
-					Log.w(TAG, "app update activity not found", anfe);
-				}
-			}
+			// launch the installer
 
+			AdminPasswordManager.getInstance().setInstallerIgnoreStartTime();
+			Toast.makeText(DownloadDiviAppActivity.this, "start installation prompt", Toast.LENGTH_SHORT).show();
 			Intent intent = new Intent(Intent.ACTION_VIEW);
 			intent.setDataAndType(Uri.fromFile(apkFile), "application/vnd.android.package-archive");
 			startActivity(intent);

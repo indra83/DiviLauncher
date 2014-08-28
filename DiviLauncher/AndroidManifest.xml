@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="co.in.divi.launcher"
-    android:versionCode="27"
-    android:versionName="v1.2.2 (Dawn)" >
+    android:versionCode="35"
+    android:versionName="v1.2.5 (Dawn)" >
 
     <uses-sdk
         android:minSdkVersion="14"
@@ -41,24 +41,12 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="co.in.divi.launcher.lockscreen.UnlockScreenActivity"
+            android:name="co.in.divi.launcher.WipeActivity"
             android:excludeFromRecents="true"
             android:launchMode="singleInstance"
             android:noHistory="true"
             android:screenOrientation="landscape"
             android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" >
-        </activity>
-        <activity
-            android:name="co.in.divi.launcher.UpdateAppActivity"
-            android:launchMode="singleInstance"
-            android:screenOrientation="landscape"
-            android:stateNotNeeded="true"
-            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" >
-            <intent-filter>
-                <action android:name="co.in.divi.launcher.UPDATE_APP" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
         </activity>
         <activity
             android:name="co.in.divi.launcher.DownloadDiviAppActivity"
@@ -76,11 +64,6 @@
         <service android:name="co.in.divi.launcher.DaemonService" >
         </service>
 
-        <receiver android:name="co.in.divi.launcher.lockscreen.UnlockBroadcastReceiver" >
-            <intent-filter android:priority="1000" >
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
         <receiver android:name="co.in.divi.launcher.LockChecker" >
         </receiver>
         <receiver

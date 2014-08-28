@@ -12,7 +12,7 @@ public class LockChecker extends BroadcastReceiver {
 	private static final String	TAG				= LockChecker.class.getName();
 
 	private static final int	PERIOD			= 20000;						// 20 secs
-	private static final int	INITIAL_DELAY	= 5000;						// 5 seconds
+	private static final int	INITIAL_DELAY	= 1000;						// 5 seconds
 
 	@Override
 	public void onReceive(Context context, Intent i) {
@@ -22,7 +22,7 @@ public class LockChecker extends BroadcastReceiver {
 		context.startService(new Intent(context, DaemonService.class));
 	}
 
-	static void scheduleAlarms(Context ctxt) {
+	public static void scheduleAlarms(Context ctxt) {
 		AlarmManager mgr = (AlarmManager) ctxt.getSystemService(Context.ALARM_SERVICE);
 		Intent i = new Intent(ctxt, LockChecker.class);
 		PendingIntent pi = PendingIntent.getBroadcast(ctxt, 0, i, PendingIntent.FLAG_CANCEL_CURRENT);

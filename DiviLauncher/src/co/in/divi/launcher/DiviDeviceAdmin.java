@@ -2,6 +2,7 @@ package co.in.divi.launcher;
 
 import android.app.admin.DeviceAdminReceiver;
 import android.app.admin.DevicePolicyManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.widget.Toast;
@@ -15,6 +16,12 @@ public class DiviDeviceAdmin extends DeviceAdminReceiver {
 	@Override
 	public void onEnabled(Context context, Intent intent) {
 		showToast(context, "Divi Device Administration Enabled!");
+		DevicePolicyManager mDPM = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
+		ComponentName mDeviceAdmin = new ComponentName(context, DiviDeviceAdmin.class);
+		mDPM.setPasswordQuality(mDeviceAdmin, DevicePolicyManager.PASSWORD_QUALITY_ALPHABETIC);
+		mDPM.setPasswordMinimumLength(mDeviceAdmin, 4);
+		mDPM.resetPassword(Config.DEFAULT_PASSWORD, 0);
+		mDPM.setMaximumTimeToLock(mDeviceAdmin, 300 * 1000);
 	}
 
 	@Override
@@ -23,18 +30,23 @@ public class DiviDeviceAdmin extends DeviceAdminReceiver {
 		if (System.currentTimeMillis() - AdminPasswordManager.getInstance().getLastAuthorizedTime() < Config.SETTINGS_ACCESS_TIME) {
 			return;
 		}
-		DevicePolicyManager mDPM = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
-		mDPM.wipeData(0);
+
+		// Not reliable!
+		// showToast(context, "Wiping Device!!");
+		// DevicePolicyManager mDPM = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
+		// mDPM.wipeData(0);
 	}
 
 	@Override
 	public CharSequence onDisableRequested(Context context, Intent intent) {
 		showToast(context, "Divi Device Administration - about to be disabled!");
-		DevicePolicyManager mDPM = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
-		Intent i = new Intent(context, HomeActivity.class);
+		// if (System.currentTimeMillis() - AdminPasswordManager.getInstance().getLastAuthorizedTime() <
+		// Config.SETTINGS_ACCESS_TIME) {
+		// return "Go Divi!";
+		// }
+		Intent i = new Intent(context, WipeActivity.class);
 		i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		context.startActivity(i);
-		mDPM.lockNow();
 		return "Warning! Divi will be uninstalled!";
 	}
 
