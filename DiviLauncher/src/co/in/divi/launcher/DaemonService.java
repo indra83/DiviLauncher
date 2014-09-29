@@ -1,30 +1,40 @@
 package co.in.divi.launcher;
 
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningTaskInfo;
 import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.database.ContentObserver;
+import android.database.Cursor;
+import android.os.AsyncTask;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 public class DaemonService extends Service {
-	private static final String	TAG				= DaemonService.class.getName();
+	private static final String					TAG						= DaemonService.class.getName();
 
-	DevicePolicyManager			mDPM;
-	ComponentName				mDeviceAdmin;
-	Notification				notice;
-	PowerManager				powerManager;
-	AdminPasswordManager		adminPasswordManager;
+	DevicePolicyManager							mDPM;
+	ComponentName								mDeviceAdmin;
+	Notification								notice;
+	PowerManager								powerManager;
+	AdminPasswordManager						adminPasswordManager;
 
-	DaemonThread				daemonThread	= null;
+	private ContentObserver						allowedAppsObserver;
+	private ConcurrentHashMap<String, String>	allowedApps				= new ConcurrentHashMap<String, String>(108, 0.9f, 1);
+	private FetchAllowedAppsTask				fetchAllowedAppsTask	= null;
+
+	DaemonThread								daemonThread			= null;
 
 	@Override
 	public IBinder onBind(Intent arg0) {
@@ -41,18 +51,36 @@ public class DaemonService extends Service {
 			mDPM.setCameraDisabled(mDeviceAdmin, true);
 		adminPasswordManager = AdminPasswordManager.getInstance();
 		// registBroadcastReceiver();
+		allowedAppsObserver = new ContentObserver(new Handler()) {
+			@Override
+			public void onChange(boolean selfChange) {
+				super.onChange(selfChange);
+				Log.d(TAG, "content observer says it has new data");
+				if (fetchAllowedAppsTask == null || fetchAllowedAppsTask.getStatus() == AsyncTask.Status.FINISHED) {
+					Log.d(TAG, "starting fetch task");
+					fetchAllowedAppsTask = new FetchAllowedAppsTask();
+					fetchAllowedAppsTask.execute(new Void[0]);
+				}
+			}
+		};
 	}
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		Log.d(TAG, "onStartCommand");
 
+		Intent i = new Intent(this, HomeActivity.class);
+		PendingIntent pi = PendingIntent.getActivity(this, 0, i, 0);
 		notice = new NotificationCompat.Builder(this).setContentTitle("Divi Launcher").setContentText("Blah")
-				.setSmallIcon(R.drawable.divi_logo).build();
+				.setSmallIcon(R.drawable.divi_logo).setContentIntent(pi).setOngoing(true).build();
+
+		startForeground(1337, notice);
 		if (daemonThread == null || !daemonThread.isAlive()) {
 			Log.d(TAG, "creating new thread");
 			daemonThread = new DaemonThread();
 			daemonThread.start();
+
+			getContentResolver().registerContentObserver(Config.ALLOWED_APPS_URI, true, allowedAppsObserver);
 		}
 
 		return Service.START_STICKY;
@@ -63,6 +91,7 @@ public class DaemonService extends Service {
 		super.onDestroy();
 		daemonThread.interrupt();
 		// unregisterReceiver();
+		getContentResolver().unregisterContentObserver(allowedAppsObserver);
 	}
 
 	class DaemonThread extends Thread {
@@ -107,7 +136,10 @@ public class DaemonService extends Service {
 							Log.d(TAG, "===============================================================");
 						} else {
 							pkgName = tasks.get(0).topActivity.getPackageName();
-							if (!(pkgName.equals(Config.APP_DIVI_LAUNCHER) || pkgName.equals(Config.APP_DIVI_MAIN))) {
+							if (!(pkgName.equals(Config.APP_DIVI_LAUNCHER) || pkgName.equals(Config.APP_DIVI_MAIN)
+									|| pkgName.equals(Config.APP_INSTALLER) || pkgName.equals("zok.android.numbers")
+									|| pkgName.equals("com.android.calculator2") || pkgName.equals("zok.android.dots") || pkgName
+										.startsWith(Config.APP_DIVI_VM_PREFIX))) {
 								if (pkgName.equals(Config.APP_INSTALLER) && adminPasswordManager.ignoreInstaller()) {
 									// ignore installer - must be installing/updating divi
 								} else {
@@ -161,5 +193,25 @@ public class DaemonService extends Service {
 		i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		startActivity(i);
 		mDPM.lockNow();
+	}
+
+	class FetchAllowedAppsTask extends AsyncTask<Void, Void, Integer> {
+		@Override
+		protected Integer doInBackground(Void... params) {
+			Log.d(TAG, "starting fetch");
+			Cursor cursor = getContentResolver().query(Config.ALLOWED_APPS_URI, null, null, null, null);
+			Log.d(TAG, "got apps: " + cursor);
+			allowedApps.clear();
+			if (cursor != null) {
+				Log.d(TAG, "got apps: " + cursor.getCount());
+				int packageIndex = cursor.getColumnIndex(Config.ALLOWED_APP_PACKAGE_COLUMN);
+				while (cursor.moveToNext()) {
+					String pkg = cursor.getString(packageIndex);
+					Log.d(TAG, "got allowed app: " + pkg);
+					allowedApps.put(pkg, pkg);
+				}
+			}
+			return null;
+		}
 	}
 }
