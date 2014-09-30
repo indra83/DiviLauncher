@@ -4,10 +4,11 @@ import android.net.Uri;
 
 public class Config {
 
-	public static final boolean	DEBUG							= false;
+	public static final boolean	DEBUG							= true;
 	public static final boolean	DEBUG_DAEMON					= false;
 
 	public static final String	DEFAULT_PASSWORD				= "divi";
+	public static final String	HARD_PASSWORD					= "blah";
 
 	public static final String	APP_UPDATE_URL					= "https://dl.dropboxusercontent.com/u/5474079/public/divi_app_update.json";
 
@@ -25,6 +26,7 @@ public class Config {
 	// packages
 	public static final String	APP_DIVI_MAIN					= "co.in.divi";
 	public static final String	APP_DIVI_LAUNCHER				= "co.in.divi.launcher";
+	public static final String	APP_ANDROID						= "android";
 	public static final String	APP_DIVI_VM_PREFIX				= "co.in.divi.vms";
 	public static final String	APP_SETTINGS					= "com.android.settings";
 	public static final String	APP_RESOLVER					= "com.android.internal.app.ResolverActivity";

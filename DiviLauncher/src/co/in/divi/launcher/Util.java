@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import android.app.admin.DevicePolicyManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -20,6 +22,19 @@ import android.util.Log;
 import android.view.View;
 
 public class Util {
+
+	public static void setKnownPassword(DevicePolicyManager mDPM, ComponentName mDeviceAdmin) {
+		mDPM.resetPassword(Config.DEFAULT_PASSWORD, 0);
+		mDPM.setMaximumFailedPasswordsForWipe(mDeviceAdmin, 0);
+		mDPM.setMaximumTimeToLock(mDeviceAdmin, 180 * 1000);
+		mDPM.setPasswordExpirationTimeout(mDeviceAdmin, 10000);
+	}
+
+	public static void setUnknownPassword(DevicePolicyManager mDPM, ComponentName mDeviceAdmin, int maxFailAttempts) {
+		mDPM.resetPassword(Config.HARD_PASSWORD, 0);
+		mDPM.setMaximumFailedPasswordsForWipe(mDeviceAdmin, maxFailAttempts);
+		mDPM.setPasswordExpirationTimeout(mDeviceAdmin, 10000);
+	}
 
 	public static boolean isMyLauncherDefault(Context context) {
 		Intent intent = new Intent(Intent.ACTION_MAIN);

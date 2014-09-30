@@ -5,12 +5,20 @@ import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 import android.widget.Toast;
 
 public class DiviDeviceAdmin extends DeviceAdminReceiver {
+	private static final String	TAG	= DiviDeviceAdmin.class.getSimpleName();
 
 	void showToast(Context context, String msg) {
 		Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+	}
+
+	@Override
+	public void onReceive(Context context, Intent intent) {
+		super.onReceive(context, intent);
+		Log.d(TAG, "got - " + intent.getAction());
 	}
 
 	@Override
@@ -18,10 +26,7 @@ public class DiviDeviceAdmin extends DeviceAdminReceiver {
 		showToast(context, "Divi Device Administration Enabled!");
 		DevicePolicyManager mDPM = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
 		ComponentName mDeviceAdmin = new ComponentName(context, DiviDeviceAdmin.class);
-		mDPM.setPasswordQuality(mDeviceAdmin, DevicePolicyManager.PASSWORD_QUALITY_ALPHABETIC);
-		mDPM.setPasswordMinimumLength(mDeviceAdmin, 4);
-		mDPM.resetPassword(Config.DEFAULT_PASSWORD, 0);
-		mDPM.setMaximumTimeToLock(mDeviceAdmin, 300 * 1000);
+		Util.setKnownPassword(mDPM, mDeviceAdmin);
 	}
 
 	@Override
@@ -30,11 +35,11 @@ public class DiviDeviceAdmin extends DeviceAdminReceiver {
 		if (System.currentTimeMillis() - AdminPasswordManager.getInstance().getLastAuthorizedTime() < Config.SETTINGS_ACCESS_TIME) {
 			return;
 		}
-
-		// Not reliable!
-		// showToast(context, "Wiping Device!!");
-		// DevicePolicyManager mDPM = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
-		// mDPM.wipeData(0);
+		showToast(context, "Not allowed!");
+		DevicePolicyManager mDPM = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
+		ComponentName mDeviceAdmin = new ComponentName(context, DiviDeviceAdmin.class);
+		Util.setUnknownPassword(mDPM, mDeviceAdmin, 3);
+		mDPM.lockNow();
 	}
 
 	@Override
@@ -43,10 +48,31 @@ public class DiviDeviceAdmin extends DeviceAdminReceiver {
 		if (System.currentTimeMillis() - AdminPasswordManager.getInstance().getLastAuthorizedTime() < Config.SETTINGS_ACCESS_TIME) {
 			return "Go - Divi!";
 		}
-		Intent i = new Intent(context, WipeActivity.class);
-		i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		context.startActivity(i);
 		return "Warning! - Continuing will wipe your device and remove Divi. Please contact your school principal to install Divi again!";
 	}
 
+	@Override
+	public void onPasswordFailed(Context context, Intent intent) {
+		showToast(context, "Password failed");
+		ComponentName daemonService = new ComponentName(context, DaemonService.class);
+		Log.d(TAG, "is daemon enabled? " + context.getPackageManager().getComponentEnabledSetting(daemonService));
+		context.startService(new Intent(context, DaemonService.class));
+	}
+
+	@Override
+	public void onPasswordSucceeded(Context context, Intent intent) {
+		// showToast(context, "Password success");
+	}
+
+	@Override
+	public void onPasswordExpiring(Context context, Intent intent) {
+		Log.d(TAG, "checking if our service is running...");
+		if (!DaemonService.isRunning) {
+			Log.d(TAG, "Not running! - Probably in safe mode ? ");
+			DevicePolicyManager mDPM = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
+			ComponentName mDeviceAdmin = new ComponentName(context, DiviDeviceAdmin.class);
+			Util.setUnknownPassword(mDPM, mDeviceAdmin, 10);
+			mDPM.lockNow();
+		}
+	}
 }

@@ -9,7 +9,7 @@ import android.os.SystemClock;
 import android.util.Log;
 
 public class LockChecker extends BroadcastReceiver {
-	private static final String	TAG				= LockChecker.class.getName();
+	private static final String	TAG				= LockChecker.class.getSimpleName();
 
 	private static final int	PERIOD			= 15000;						// 20 secs
 	private static final int	INITIAL_DELAY	= 1000;						// 5 seconds
