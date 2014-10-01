@@ -136,20 +136,6 @@ public class HomeActivity extends Activity {
 	protected void onStart() {
 		super.onStart();
 
-		/**** TEMP!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
-		// final PackageManager pm = getPackageManager();
-		// // get a list of installed apps.
-		// List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
-		//
-		// for (ApplicationInfo packageInfo : packages) {
-		// Log.d(TAG, "Installed package :" + packageInfo.packageName);
-		// Log.d(TAG, "Source dir : " + packageInfo.sourceDir);
-		// Log.d(TAG, "Launch Activity :" + pm.getLaunchIntentForPackage(packageInfo.packageName));
-		// boolean isSysP = ((packageInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0) ? true : false;
-		// Log.d(TAG, "is system package: " + isSysP);
-		// }
-		/**** end TEMP!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
-
 		try {
 			StringBuilder statusTextBuilder = new StringBuilder();
 			if (settingsManager.getADBEnabled()) {
@@ -173,21 +159,19 @@ public class HomeActivity extends Activity {
 	protected void onResume() {
 		super.onResume();
 		hideBars();
-		if (!Util.isMyLauncherDefault(this)) {
-			Toast.makeText(this, "Make Divi the default home screen", Toast.LENGTH_LONG).show();
-			Intent i = new Intent(Intent.ACTION_MAIN);
-			i.addCategory(Intent.CATEGORY_HOME);
-			startActivity(i);
-			finish();
-			// make sure we don't get into infinite lock screen
-			mDPM.removeActiveAdmin(mDeviceAdmin);
-			return;
-		}
 		if (!mDPM.isAdminActive(mDeviceAdmin)) {
 			Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
 			intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, mDeviceAdmin);
 			intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Set Divi Device Administration");
 			startActivity(intent);
+			finish();
+			return;
+		}
+		if (!Util.isMyLauncherDefault(this)) {
+			Toast.makeText(this, "Make Divi the default home screen", Toast.LENGTH_LONG).show();
+			Intent i = new Intent(Intent.ACTION_MAIN);
+			i.addCategory(Intent.CATEGORY_HOME);
+			startActivity(i);
 			finish();
 			return;
 		}

@@ -27,13 +27,13 @@ public class Util {
 		mDPM.resetPassword(Config.DEFAULT_PASSWORD, 0);
 		mDPM.setMaximumFailedPasswordsForWipe(mDeviceAdmin, 0);
 		mDPM.setMaximumTimeToLock(mDeviceAdmin, 180 * 1000);
-		mDPM.setPasswordExpirationTimeout(mDeviceAdmin, 10000);
+		mDPM.setPasswordExpirationTimeout(mDeviceAdmin, 20000); // 20 secs
 	}
 
 	public static void setUnknownPassword(DevicePolicyManager mDPM, ComponentName mDeviceAdmin, int maxFailAttempts) {
 		mDPM.resetPassword(Config.HARD_PASSWORD, 0);
 		mDPM.setMaximumFailedPasswordsForWipe(mDeviceAdmin, maxFailAttempts);
-		mDPM.setPasswordExpirationTimeout(mDeviceAdmin, 10000);
+		mDPM.setPasswordExpirationTimeout(mDeviceAdmin, 0);
 	}
 
 	public static boolean isMyLauncherDefault(Context context) {

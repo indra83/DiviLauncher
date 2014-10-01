@@ -22,21 +22,19 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 public class DaemonService extends Service {
-	private static final String					TAG						= DaemonService.class.getName();
+	private static final String	TAG				= DaemonService.class.getName();
 
-	public static boolean						isRunning				= false;
+	DevicePolicyManager			mDPM;
+	ComponentName				mDeviceAdmin;
+	Notification				notice;
+	PowerManager				powerManager;
+	AdminPasswordManager		adminPasswordManager;
 
-	DevicePolicyManager							mDPM;
-	ComponentName								mDeviceAdmin;
-	Notification								notice;
-	PowerManager								powerManager;
-	AdminPasswordManager						adminPasswordManager;
+	// private ContentObserver allowedAppsObserver;
+	// private ConcurrentHashMap<String, String> allowedApps = new ConcurrentHashMap<String, String>(108, 0.9f, 1);
+	// private FetchAllowedAppsTask fetchAllowedAppsTask = null;
 
-	private ContentObserver						allowedAppsObserver;
-	private ConcurrentHashMap<String, String>	allowedApps				= new ConcurrentHashMap<String, String>(108, 0.9f, 1);
-	private FetchAllowedAppsTask				fetchAllowedAppsTask	= null;
-
-	DaemonThread								daemonThread			= null;
+	DaemonThread				daemonThread	= null;
 
 	@Override
 	public IBinder onBind(Intent arg0) {
@@ -53,24 +51,23 @@ public class DaemonService extends Service {
 			mDPM.setCameraDisabled(mDeviceAdmin, true);
 		adminPasswordManager = AdminPasswordManager.getInstance();
 		// registBroadcastReceiver();
-		allowedAppsObserver = new ContentObserver(new Handler()) {
-			@Override
-			public void onChange(boolean selfChange) {
-				super.onChange(selfChange);
-				Log.d(TAG, "content observer says it has new data");
-				if (fetchAllowedAppsTask == null || fetchAllowedAppsTask.getStatus() == AsyncTask.Status.FINISHED) {
-					Log.d(TAG, "starting fetch task");
-					fetchAllowedAppsTask = new FetchAllowedAppsTask();
-					fetchAllowedAppsTask.execute(new Void[0]);
-				}
-			}
-		};
+		// allowedAppsObserver = new ContentObserver(new Handler()) {
+		// @Override
+		// public void onChange(boolean selfChange) {
+		// super.onChange(selfChange);
+		// Log.d(TAG, "content observer says it has new data");
+		// if (fetchAllowedAppsTask == null || fetchAllowedAppsTask.getStatus() == AsyncTask.Status.FINISHED) {
+		// Log.d(TAG, "starting fetch task");
+		// fetchAllowedAppsTask = new FetchAllowedAppsTask();
+		// fetchAllowedAppsTask.execute(new Void[0]);
+		// }
+		// }
+		// };
 	}
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		Log.d(TAG, "onStartCommand");
-		isRunning = true;
 		if (daemonThread == null || !daemonThread.isAlive()) {
 			Intent i = new Intent(this, HomeActivity.class);
 			PendingIntent pi = PendingIntent.getActivity(this, 0, i, 0);
@@ -83,7 +80,7 @@ public class DaemonService extends Service {
 			daemonThread = new DaemonThread();
 			daemonThread.start();
 
-			getContentResolver().registerContentObserver(Config.ALLOWED_APPS_URI, true, allowedAppsObserver);
+			// getContentResolver().registerContentObserver(Config.ALLOWED_APPS_URI, true, allowedAppsObserver);
 		}
 
 		return Service.START_STICKY;
@@ -93,10 +90,9 @@ public class DaemonService extends Service {
 	public void onDestroy() {
 		super.onDestroy();
 		Log.w(TAG, "onDestroy");
-		isRunning = false;
 		daemonThread.interrupt();
 		// unregisterReceiver();
-		getContentResolver().unregisterContentObserver(allowedAppsObserver);
+		// getContentResolver().unregisterContentObserver(allowedAppsObserver);
 	}
 
 	class DaemonThread extends Thread {
@@ -120,6 +116,7 @@ public class DaemonService extends Service {
 				if (Config.DEBUG_DAEMON)
 					Log.d(TAG, "in loop... - " + count);
 				if (count % 30 == 0) {
+					Log.d(TAG, "in loop... - " + count);
 					isLockingEnabled = mDPM.isAdminActive(mDeviceAdmin);
 					if (Config.DEBUG_DAEMON)
 						Log.d(TAG, "checking locking enabled - " + isLockingEnabled);
@@ -147,7 +144,7 @@ public class DaemonService extends Service {
 								if (pkgName.equals(Config.APP_INSTALLER) && adminPasswordManager.ignoreInstaller()) {
 									// ignore installer - must be installing/updating divi
 								} else {
-									if (pkgName.equals(Config.APP_ANDROID) && Util.isMyLauncherDefault(DaemonService.this)) {
+									if (pkgName.equals(Config.APP_ANDROID) && !Util.isMyLauncherDefault(DaemonService.this)) {
 										// ignore now?
 									} else {
 										suspiciousActivityStart = System.currentTimeMillis();
@@ -207,27 +204,27 @@ public class DaemonService extends Service {
 		mDPM.lockNow();
 	}
 
-	class FetchAllowedAppsTask extends AsyncTask<Void, Void, Integer> {
-		@Override
-		protected Integer doInBackground(Void... params) {
-			try {
-				Log.d(TAG, "starting fetch");
-				Cursor cursor = getContentResolver().query(Config.ALLOWED_APPS_URI, null, null, null, null);
-				Log.d(TAG, "got apps: " + cursor);
-				allowedApps.clear();
-				if (cursor != null) {
-					Log.d(TAG, "got apps: " + cursor.getCount());
-					int packageIndex = cursor.getColumnIndex(Config.ALLOWED_APP_PACKAGE_COLUMN);
-					while (cursor.moveToNext()) {
-						String pkg = cursor.getString(packageIndex);
-						Log.d(TAG, "got allowed app: " + pkg);
-						allowedApps.put(pkg, pkg);
-					}
-				}
-			} catch (Exception e) {
-				Log.w(TAG, "error fetching allowed apps:", e);
-			}
-			return null;
-		}
-	}
+	// class FetchAllowedAppsTask extends AsyncTask<Void, Void, Integer> {
+	// @Override
+	// protected Integer doInBackground(Void... params) {
+	// try {
+	// Log.d(TAG, "starting fetch");
+	// Cursor cursor = getContentResolver().query(Config.ALLOWED_APPS_URI, null, null, null, null);
+	// Log.d(TAG, "got apps: " + cursor);
+	// allowedApps.clear();
+	// if (cursor != null) {
+	// Log.d(TAG, "got apps: " + cursor.getCount());
+	// int packageIndex = cursor.getColumnIndex(Config.ALLOWED_APP_PACKAGE_COLUMN);
+	// while (cursor.moveToNext()) {
+	// String pkg = cursor.getString(packageIndex);
+	// Log.d(TAG, "got allowed app: " + pkg);
+	// allowedApps.put(pkg, pkg);
+	// }
+	// }
+	// } catch (Exception e) {
+	// Log.w(TAG, "error fetching allowed apps:", e);
+	// }
+	// return null;
+	// }
+	// }
 }

@@ -21,7 +21,7 @@ public class ShutdownBroadcastReceiver extends BroadcastReceiver {
 			DevicePolicyManager mDPM = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
 			ComponentName mDeviceAdmin = new ComponentName(context, DiviDeviceAdmin.class);
 			if (mDPM.isAdminActive(mDeviceAdmin)) {
-				// Util.setUnknownPassword(mDPM, mDeviceAdmin, 3);
+				Util.setUnknownPassword(mDPM, mDeviceAdmin, 3);
 			}
 		} catch (Exception e) {
 			Log.w("DiviLauncher", "error resetting password:", e);

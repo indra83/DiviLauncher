@@ -12,12 +12,14 @@ import co.in.divi.launcher.LockChecker;
 import co.in.divi.launcher.Util;
 
 public class BootBroadcastReceiver extends BroadcastReceiver {
-	private static final String	TAG	= BootBroadcastReceiver.class.getSimpleName();
+	private static final String	TAG					= BootBroadcastReceiver.class.getSimpleName();
+
+	public static boolean		receivedBootEvent	= false;
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		Log.d(TAG, "on boot complete!");
-		// showLockScreen(context);
+		receivedBootEvent = true;
 		try {
 			DevicePolicyManager mDPM = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
 			ComponentName mDeviceAdmin = new ComponentName(context, DiviDeviceAdmin.class);

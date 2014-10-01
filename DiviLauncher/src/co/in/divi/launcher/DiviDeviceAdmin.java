@@ -1,5 +1,6 @@
 package co.in.divi.launcher;
 
+import co.in.divi.launcher.lockscreen.BootBroadcastReceiver;
 import android.app.admin.DeviceAdminReceiver;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
@@ -18,7 +19,8 @@ public class DiviDeviceAdmin extends DeviceAdminReceiver {
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		super.onReceive(context, intent);
-		Log.d(TAG, "got - " + intent.getAction());
+		if (Config.DEBUG)
+			Log.d(TAG, "got - " + intent.getAction());
 	}
 
 	@Override
@@ -53,10 +55,10 @@ public class DiviDeviceAdmin extends DeviceAdminReceiver {
 
 	@Override
 	public void onPasswordFailed(Context context, Intent intent) {
-		showToast(context, "Password failed");
-		ComponentName daemonService = new ComponentName(context, DaemonService.class);
-		Log.d(TAG, "is daemon enabled? " + context.getPackageManager().getComponentEnabledSetting(daemonService));
-		context.startService(new Intent(context, DaemonService.class));
+		// showToast(context, "Password failed");
+		// ComponentName daemonService = new ComponentName(context, DaemonService.class);
+		// Log.d(TAG, "is daemon enabled? " + context.getPackageManager().getComponentEnabledSetting(daemonService));
+		// context.startService(new Intent(context, DaemonService.class));
 	}
 
 	@Override
@@ -67,11 +69,11 @@ public class DiviDeviceAdmin extends DeviceAdminReceiver {
 	@Override
 	public void onPasswordExpiring(Context context, Intent intent) {
 		Log.d(TAG, "checking if our service is running...");
-		if (!DaemonService.isRunning) {
+		if (!BootBroadcastReceiver.receivedBootEvent) {
 			Log.d(TAG, "Not running! - Probably in safe mode ? ");
 			DevicePolicyManager mDPM = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
 			ComponentName mDeviceAdmin = new ComponentName(context, DiviDeviceAdmin.class);
-			Util.setUnknownPassword(mDPM, mDeviceAdmin, 10);
+			Util.setUnknownPassword(mDPM, mDeviceAdmin, 0);
 			mDPM.lockNow();
 		}
 	}
