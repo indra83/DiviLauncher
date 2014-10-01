@@ -26,6 +26,7 @@ public class DiviDeviceAdmin extends DeviceAdminReceiver {
 	@Override
 	public void onEnabled(Context context, Intent intent) {
 		showToast(context, "Divi Device Administration Enabled!");
+		BootBroadcastReceiver.receivedBootEvent = true; // force this flag, otherwise we loose password.
 		DevicePolicyManager mDPM = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
 		ComponentName mDeviceAdmin = new ComponentName(context, DiviDeviceAdmin.class);
 		Util.setKnownPassword(mDPM, mDeviceAdmin);
