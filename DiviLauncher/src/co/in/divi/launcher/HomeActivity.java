@@ -67,10 +67,29 @@ public class HomeActivity extends Activity {
 		// set alram
 		LockChecker.scheduleAlarms(this);
 
+		// demo mode - show disable button
+		if (Config.DEMO_MODE) {
+			findViewById(R.id.disable).setVisibility(View.VISIBLE);
+			findViewById(R.id.disable).setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					// remove defaults
+					getPackageManager().clearPackagePreferredActivities(Config.APP_DIVI_LAUNCHER);
+					// remove password
+					if (mDPM.isAdminActive(mDeviceAdmin)) {
+						mDPM.resetPassword(Config.DEFAULT_PASSWORD, 0);
+						mDPM.removeActiveAdmin(mDeviceAdmin);
+					}
+					// finish
+					finish();
+				}
+			});
+		}
+
 		findViewById(R.id.update).setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				if (AdminPasswordManager.getInstance().hasTriedUpdating()) {
+				if (!Config.DEMO_MODE && AdminPasswordManager.getInstance().hasTriedUpdating()) {
 					if (mDPM.isAdminActive(mDeviceAdmin))
 						mDPM.lockNow();
 					return;

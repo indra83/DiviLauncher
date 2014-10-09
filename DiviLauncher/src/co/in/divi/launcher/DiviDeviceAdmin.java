@@ -38,10 +38,12 @@ public class DiviDeviceAdmin extends DeviceAdminReceiver {
 		if (System.currentTimeMillis() - AdminPasswordManager.getInstance().getLastAuthorizedTime() < Config.SETTINGS_ACCESS_TIME) {
 			return;
 		}
+		if (Config.DEMO_MODE)
+			return;
 		showToast(context, "Not allowed!");
 		DevicePolicyManager mDPM = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
 		ComponentName mDeviceAdmin = new ComponentName(context, DiviDeviceAdmin.class);
-		Util.setUnknownPassword(mDPM, mDeviceAdmin, 3);
+		Util.setUnknownPassword(mDPM, mDeviceAdmin, 5);
 		mDPM.lockNow();
 	}
 
@@ -69,7 +71,7 @@ public class DiviDeviceAdmin extends DeviceAdminReceiver {
 
 	@Override
 	public void onPasswordExpiring(Context context, Intent intent) {
-		Log.d(TAG, "checking if our service is running...");
+		// Log.d(TAG, "checking if our service is running...");
 		if (!BootBroadcastReceiver.receivedBootEvent) {
 			Log.d(TAG, "Not running! - Probably in safe mode ? ");
 			DevicePolicyManager mDPM = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);

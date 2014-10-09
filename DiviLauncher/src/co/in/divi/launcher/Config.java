@@ -4,13 +4,14 @@ import android.net.Uri;
 
 public class Config {
 
-	public static final boolean	DEBUG							= false;
-	public static final boolean	DEBUG_DAEMON					= false;
+	public static final boolean	DEBUG							= true;
+	public static final boolean	DEBUG_DAEMON					= true;
+	public static final boolean	DEMO_MODE						= true;
 
-	public static final String	DEFAULT_PASSWORD				= "dawn";
+	public static final String	DEFAULT_PASSWORD				= "divi";
 	public static final String	HARD_PASSWORD					= "superDogSnowy";
 
-	public static final String	APP_UPDATE_URL					= "https://dl.dropboxusercontent.com/u/5474079/public/divi_app_update.json";
+	public static final String	APP_UPDATE_URL					= "https://dl.dropboxusercontent.com/u/5474079/demo/divi_app_update.json";
 
 	public static final int		SETTINGS_ACCESS_TIME			= 2 * 60 * 1000;
 

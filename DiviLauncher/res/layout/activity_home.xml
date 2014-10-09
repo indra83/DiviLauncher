@@ -52,4 +52,16 @@
         android:text="Update"
         android:textSize="16sp" />
 
+    <Button
+        android:id="@+id/disable"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        android:layout_margin="45dp"
+        android:padding="5dp"
+        android:text="Disable Divi Guard"
+        android:textSize="20sp"
+        android:visibility="gone" />
+
 </RelativeLayout>

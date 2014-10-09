@@ -22,19 +22,19 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 public class DaemonService extends Service {
-	private static final String	TAG				= DaemonService.class.getName();
+	private static final String					TAG						= DaemonService.class.getSimpleName();
 
-	DevicePolicyManager			mDPM;
-	ComponentName				mDeviceAdmin;
-	Notification				notice;
-	PowerManager				powerManager;
-	AdminPasswordManager		adminPasswordManager;
+	DevicePolicyManager							mDPM;
+	ComponentName								mDeviceAdmin;
+	Notification								notice;
+	PowerManager								powerManager;
+	AdminPasswordManager						adminPasswordManager;
 
-	// private ContentObserver allowedAppsObserver;
-	// private ConcurrentHashMap<String, String> allowedApps = new ConcurrentHashMap<String, String>(108, 0.9f, 1);
-	// private FetchAllowedAppsTask fetchAllowedAppsTask = null;
+	private ContentObserver						allowedAppsObserver;
+	private ConcurrentHashMap<String, String>	allowedApps				= new ConcurrentHashMap<String, String>(108, 0.9f, 1);
+	private FetchAllowedAppsTask				fetchAllowedAppsTask	= null;
 
-	DaemonThread				daemonThread	= null;
+	DaemonThread								daemonThread			= null;
 
 	@Override
 	public IBinder onBind(Intent arg0) {
@@ -51,18 +51,14 @@ public class DaemonService extends Service {
 			mDPM.setCameraDisabled(mDeviceAdmin, true);
 		adminPasswordManager = AdminPasswordManager.getInstance();
 		// registBroadcastReceiver();
-		// allowedAppsObserver = new ContentObserver(new Handler()) {
-		// @Override
-		// public void onChange(boolean selfChange) {
-		// super.onChange(selfChange);
-		// Log.d(TAG, "content observer says it has new data");
-		// if (fetchAllowedAppsTask == null || fetchAllowedAppsTask.getStatus() == AsyncTask.Status.FINISHED) {
-		// Log.d(TAG, "starting fetch task");
-		// fetchAllowedAppsTask = new FetchAllowedAppsTask();
-		// fetchAllowedAppsTask.execute(new Void[0]);
-		// }
-		// }
-		// };
+		allowedAppsObserver = new ContentObserver(new Handler()) {
+			@Override
+			public void onChange(boolean selfChange) {
+				super.onChange(selfChange);
+				Log.d(TAG, "content observer says it has new data");
+				fetchAllowedApps();
+			}
+		};
 	}
 
 	@Override
@@ -80,7 +76,8 @@ public class DaemonService extends Service {
 			daemonThread = new DaemonThread();
 			daemonThread.start();
 
-			// getContentResolver().registerContentObserver(Config.ALLOWED_APPS_URI, true, allowedAppsObserver);
+			getContentResolver().registerContentObserver(Config.ALLOWED_APPS_URI, true, allowedAppsObserver);
+			fetchAllowedApps();
 		}
 
 		return Service.START_STICKY;
@@ -92,7 +89,7 @@ public class DaemonService extends Service {
 		Log.w(TAG, "onDestroy");
 		daemonThread.interrupt();
 		// unregisterReceiver();
-		// getContentResolver().unregisterContentObserver(allowedAppsObserver);
+		getContentResolver().unregisterContentObserver(allowedAppsObserver);
 	}
 
 	class DaemonThread extends Thread {
@@ -141,11 +138,16 @@ public class DaemonService extends Service {
 							pkgName = tasks.get(0).topActivity.getPackageName();
 							if (!(pkgName.equals(Config.APP_DIVI_LAUNCHER) || pkgName.equals(Config.APP_DIVI_MAIN) || pkgName
 									.equals(Config.APP_INSTALLER))) {
-								if (pkgName.equals(Config.APP_INSTALLER) && adminPasswordManager.ignoreInstaller()) {
-									// ignore installer - must be installing/updating divi
+								// if (pkgName.equals(Config.APP_INSTALLER) && adminPasswordManager.ignoreInstaller()) {
+								// // ignore installer - must be installing/updating divi
+								// } else
+								if (allowedApps.containsKey(pkgName)) {
+									// using an authorized 3p app..
 								} else {
 									if (pkgName.equals(Config.APP_ANDROID) && !Util.isMyLauncherDefault(DaemonService.this)) {
-										// ignore now?
+										Intent i = new Intent(DaemonService.this, HomeActivity.class);
+										i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+										startActivity(i);
 									} else {
 										suspiciousActivityStart = System.currentTimeMillis();
 										killAll = true;
@@ -160,6 +162,7 @@ public class DaemonService extends Service {
 						for (RunningTaskInfo task : tasks) {
 							Log.d(TAG, "task:" + task.id + ",top:" + task.topActivity.getPackageName());
 						}
+						printAllowedApps();
 					}
 					if (Config.DEBUG_DAEMON)
 						Log.d(TAG, "===============================================================");
@@ -204,27 +207,41 @@ public class DaemonService extends Service {
 		mDPM.lockNow();
 	}
 
-	// class FetchAllowedAppsTask extends AsyncTask<Void, Void, Integer> {
-	// @Override
-	// protected Integer doInBackground(Void... params) {
-	// try {
-	// Log.d(TAG, "starting fetch");
-	// Cursor cursor = getContentResolver().query(Config.ALLOWED_APPS_URI, null, null, null, null);
-	// Log.d(TAG, "got apps: " + cursor);
-	// allowedApps.clear();
-	// if (cursor != null) {
-	// Log.d(TAG, "got apps: " + cursor.getCount());
-	// int packageIndex = cursor.getColumnIndex(Config.ALLOWED_APP_PACKAGE_COLUMN);
-	// while (cursor.moveToNext()) {
-	// String pkg = cursor.getString(packageIndex);
-	// Log.d(TAG, "got allowed app: " + pkg);
-	// allowedApps.put(pkg, pkg);
-	// }
-	// }
-	// } catch (Exception e) {
-	// Log.w(TAG, "error fetching allowed apps:", e);
-	// }
-	// return null;
-	// }
-	// }
+	private void fetchAllowedApps() {
+		if (fetchAllowedAppsTask == null || fetchAllowedAppsTask.getStatus() == AsyncTask.Status.FINISHED) {
+			Log.d(TAG, "starting fetch task");
+			fetchAllowedAppsTask = new FetchAllowedAppsTask();
+			fetchAllowedAppsTask.execute(new Void[0]);
+		}
+	}
+
+	class FetchAllowedAppsTask extends AsyncTask<Void, Void, Integer> {
+		@Override
+		protected Integer doInBackground(Void... params) {
+			try {
+				Log.d(TAG, "starting fetch");
+				Cursor cursor = getContentResolver().query(Config.ALLOWED_APPS_URI, null, null, null, null);
+				Log.d(TAG, "got apps: " + cursor);
+				allowedApps.clear();
+				if (cursor != null) {
+					Log.d(TAG, "got apps: " + cursor.getCount());
+					int packageIndex = cursor.getColumnIndex(Config.ALLOWED_APP_PACKAGE_COLUMN);
+					while (cursor.moveToNext()) {
+						String pkg = cursor.getString(packageIndex);
+						Log.d(TAG, "got allowed app: " + pkg);
+						allowedApps.put(pkg, pkg);
+					}
+				}
+			} catch (Exception e) {
+				Log.w(TAG, "error fetching allowed apps:", e);
+			}
+			return null;
+		}
+	}
+
+	// debug!
+	private void printAllowedApps() {
+		for (String pkg : allowedApps.keySet())
+			Log.d(TAG, "allowed app - " + pkg);
+	}
 }
