@@ -41,7 +41,7 @@ public class DiviDeviceAdmin extends DeviceAdminReceiver {
 		showToast(context, "Not allowed!");
 		DevicePolicyManager mDPM = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
 		ComponentName mDeviceAdmin = new ComponentName(context, DiviDeviceAdmin.class);
-		Util.setUnknownPassword(mDPM, mDeviceAdmin, 3);
+		Util.setUnknownPassword(mDPM, mDeviceAdmin, 0);
 		mDPM.lockNow();
 	}
 
