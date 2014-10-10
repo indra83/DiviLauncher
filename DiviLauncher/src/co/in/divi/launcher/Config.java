@@ -5,7 +5,7 @@ import android.net.Uri;
 public class Config {
 
 	public static final boolean	DEBUG							= true;
-	public static final boolean	DEBUG_DAEMON					= true;
+	public static final boolean	DEBUG_DAEMON					= false;
 	public static final boolean	DEMO_MODE						= true;
 
 	public static final String	DEFAULT_PASSWORD				= "divi";
