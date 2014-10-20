@@ -177,21 +177,35 @@ public class HomeActivity extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
+		Log.d(TAG, "onResume");
 		hideBars();
 		if (!mDPM.isAdminActive(mDeviceAdmin)) {
 			Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
 			intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, mDeviceAdmin);
 			intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Set Divi Device Administration");
 			startActivity(intent);
-			finish();
+			// finish();
 			return;
 		}
 		if (!Util.isMyLauncherDefault(this)) {
+			Log.d(TAG, "prompt to make divi default");
 			Toast.makeText(this, "Make Divi the default home screen", Toast.LENGTH_LONG).show();
+
+			// make sure we can launch chooser
+			PackageManager p = getPackageManager();
+			ComponentName cN = new ComponentName(this, MockHome.class);
+			p.setComponentEnabledSetting(cN, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
+
+			Intent selector = new Intent(Intent.ACTION_MAIN);
+			selector.addCategory(Intent.CATEGORY_HOME);
+			startActivity(selector);
+
+			p.setComponentEnabledSetting(cN, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
+
 			Intent i = new Intent(Intent.ACTION_MAIN);
 			i.addCategory(Intent.CATEGORY_HOME);
 			startActivity(i);
-			finish();
+			// finish();
 			return;
 		}
 		resetTimer();

@@ -145,10 +145,9 @@ public class DaemonService extends Service {
 									// using an authorized 3p app..
 								} else {
 									if (pkgName.equals(Config.APP_ANDROID) && !Util.isMyLauncherDefault(DaemonService.this)) {
-										Intent i = new Intent(DaemonService.this, HomeActivity.class);
-										i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-										startActivity(i);
+										// ignore for now..
 									} else {
+										Log.e(TAG, "locking! - " + pkgName);
 										suspiciousActivityStart = System.currentTimeMillis();
 										killAll = true;
 										lockNow();
@@ -187,9 +186,9 @@ public class DaemonService extends Service {
 					try {
 						for (RunningTaskInfo rt : am.getRunningTasks(40)) {
 							String pName = rt.topActivity.getPackageName();
-							Log.d(TAG, "killing : " + pName);
 							if (pName.equals(Config.APP_DIVI_LAUNCHER) || pName.equals(Config.APP_DIVI_MAIN))
 								continue;
+							Log.d(TAG, "killing : " + pName);
 							am.killBackgroundProcesses(rt.topActivity.getPackageName());
 						}
 					} catch (Exception e) {
@@ -201,6 +200,7 @@ public class DaemonService extends Service {
 	}
 
 	private void lockNow() {
+		Log.d(TAG, "locking!");
 		Intent i = new Intent(DaemonService.this, HomeActivity.class);
 		i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		startActivity(i);

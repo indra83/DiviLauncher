@@ -30,6 +30,12 @@ public class DiviDeviceAdmin extends DeviceAdminReceiver {
 		DevicePolicyManager mDPM = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
 		ComponentName mDeviceAdmin = new ComponentName(context, DiviDeviceAdmin.class);
 		Util.setKnownPassword(mDPM, mDeviceAdmin);
+		// return to home
+		Intent i = new Intent(context, HomeActivity.class);
+		i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		context.startActivity(i);
+		// start daemon
+		LockChecker.scheduleAlarms(context);
 	}
 
 	@Override

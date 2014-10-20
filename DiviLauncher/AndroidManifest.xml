@@ -44,6 +44,16 @@
             </intent-filter>
         </activity>
         <activity
+            android:name="co.in.divi.launcher.MockHome"
+            android:enabled="false" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name="co.in.divi.launcher.WipeActivity"
             android:excludeFromRecents="true"
             android:launchMode="singleInstance"
