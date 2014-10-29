@@ -20,21 +20,25 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 public class DaemonService extends Service {
 	private static final String					TAG						= DaemonService.class.getSimpleName();
 
-	DevicePolicyManager							mDPM;
-	ComponentName								mDeviceAdmin;
-	Notification								notice;
-	PowerManager								powerManager;
-	AdminPasswordManager						adminPasswordManager;
+	private DevicePolicyManager					mDPM;
+	private ComponentName						mDeviceAdmin;
+	private Notification						notice;
+	private PowerManager						powerManager;
+	private ActivityManager						am;
+	private AdminPasswordManager				adminPasswordManager;
 
 	private ContentObserver						allowedAppsObserver;
+	private Handler								handler;
 	private ConcurrentHashMap<String, String>	allowedApps				= new ConcurrentHashMap<String, String>(108, 0.9f, 1);
 	private FetchAllowedAppsTask				fetchAllowedAppsTask	= null;
+	private long								lastLockRequestTime		= 0;
 
-	DaemonThread								daemonThread			= null;
+	private DaemonThread						daemonThread			= null;
 
 	@Override
 	public IBinder onBind(Intent arg0) {
@@ -44,6 +48,8 @@ public class DaemonService extends Service {
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		handler = new Handler();
+		am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
 		powerManager = (PowerManager) getSystemService(POWER_SERVICE);
 		mDPM = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
 		mDeviceAdmin = new ComponentName(this, DiviDeviceAdmin.class);
@@ -103,10 +109,9 @@ public class DaemonService extends Service {
 			// all variables here!
 			int count = 0;
 			long diff;
-			String pkgName;
+			String pkgName, appName;
 			boolean killAll = false;
 			isLockingEnabled = mDPM.isAdminActive(mDeviceAdmin);
-			ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
 			List<RunningTaskInfo> tasks;
 			while (true) {
 				count++;
@@ -128,19 +133,11 @@ public class DaemonService extends Service {
 							// disable everything for 2 mins.
 							if (Config.DEBUG_DAEMON)
 								Log.w(TAG, "kiosk mode is off!");
-							tasks = am.getRunningTasks(10);
-							Log.d(TAG, "===============================================================");
-							for (RunningTaskInfo task : tasks) {
-								Log.d(TAG, "task:" + task.id + ",top:" + task.topActivity.getPackageName());
-							}
-							Log.d(TAG, "===============================================================");
 						} else {
 							pkgName = tasks.get(0).topActivity.getPackageName();
+							appName = tasks.get(0).topActivity.getClassName();
 							if (!(pkgName.equals(Config.APP_DIVI_LAUNCHER) || pkgName.equals(Config.APP_DIVI_MAIN) || pkgName
 									.equals(Config.APP_INSTALLER))) {
-								// if (pkgName.equals(Config.APP_INSTALLER) && adminPasswordManager.ignoreInstaller()) {
-								// // ignore installer - must be installing/updating divi
-								// } else
 								if (allowedApps.containsKey(pkgName)) {
 									// using an authorized 3p app..
 								} else {
@@ -148,18 +145,30 @@ public class DaemonService extends Service {
 										// ignore for now..
 									} else {
 										Log.e(TAG, "locking! - " + pkgName);
+										for (RunningTaskInfo task : tasks) {
+											Log.d(TAG, "task: " + task.id + ", base: " + task.baseActivity.getClassName() + ", top:"
+													+ task.topActivity.getPackageName());
+										}
 										suspiciousActivityStart = System.currentTimeMillis();
 										killAll = true;
-										lockNow();
+										final String culpritAppName = pkgName + " - " + appName;
+										handler.postDelayed(new Runnable() {
+											@Override
+											public void run() {
+												lockNow(culpritAppName);
+											}
+										}, 200);
 									}
 								}
 							}
 						}
 					}
 					// print
-					if (Config.DEBUG_DAEMON) {
+					if (Config.DEBUG_DAEMON && count % 30 == 0) {
 						for (RunningTaskInfo task : tasks) {
-							Log.d(TAG, "task:" + task.id + ",top:" + task.topActivity.getPackageName());
+							Log.d(TAG,
+									"task: " + task.id + ", base: " + task.baseActivity.getClassName() + ", top:"
+											+ task.topActivity.getPackageName());
 						}
 						printAllowedApps();
 					}
@@ -199,12 +208,44 @@ public class DaemonService extends Service {
 		}
 	}
 
-	private void lockNow() {
-		Log.d(TAG, "locking!");
-		Intent i = new Intent(DaemonService.this, HomeActivity.class);
-		i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		startActivity(i);
-		mDPM.lockNow();
+	private void lockNow(String culprit) {
+		try {
+			// close any dialogs
+			sendBroadcast(new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
+			// check again
+			List<RunningTaskInfo> tasks = am.getRunningTasks(10);
+			String pkgName = null;
+			if (tasks.size() > 0) {
+				for (RunningTaskInfo task : tasks) {
+					Log.w(TAG,
+							"task: " + task.id + ", base: " + task.baseActivity.getClassName() + ", top:"
+									+ task.topActivity.getPackageName());
+				}
+				pkgName = tasks.get(0).topActivity.getPackageName();
+				if (!(pkgName.equals(Config.APP_DIVI_LAUNCHER) || pkgName.equals(Config.APP_DIVI_MAIN) || pkgName
+						.equals(Config.APP_INSTALLER))) {
+					if (allowedApps.containsKey(pkgName)) {
+						Log.d(TAG, "allowed app!");
+					} else {
+						Log.d(TAG, "locking! - " + culprit + ", cur:" + pkgName);
+						// go to home
+						Intent i = new Intent(DaemonService.this, HomeActivity.class);
+						i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_HISTORY | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+						startActivity(i);
+						// don't lock the on first notice
+						long now = System.currentTimeMillis();
+						if (now - lastLockRequestTime > Config.SUSPICIOUS_ACTIVITY_ALERT_TIME)
+							Toast.makeText(this, "Unauthorized app! - " + culprit, Toast.LENGTH_LONG).show();
+						else
+							mDPM.lockNow();
+						lastLockRequestTime = now;
+					}
+				}
+			}
+
+		} catch (Exception e) {
+			Log.e(TAG, "error locking!!", e);
+		}
 	}
 
 	private void fetchAllowedApps() {
