@@ -1,0 +1,31 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="${relativePackage}.${activityClass}" >
+
+    <TextView
+        android:id="@+id/status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/unpin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Unpin" />
+
+    <Button
+        android:id="@+id/pin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Pin" />
+
+    <Button
+        android:id="@+id/hide_apps"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Hide Apps!" />
+
+</LinearLayout>
