@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<device-admin xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <uses-policies>
+        <watch-login />
+
+        <reset-password />
+
+        <expire-password />
+
+        <limit-password />
+
+        <force-lock />
+
+        <wipe-data />
+
+        <disable-camera />
+
+        <disable-keyguard-features />
+    </uses-policies>
+
+</device-admin><!-- From: file:/C:/Work/divi/workspace/DiviLauncher/DiviLauncher2/app/src/main/res/xml/device_admin.xml -->
