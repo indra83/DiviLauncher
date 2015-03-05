@@ -1,5 +1,7 @@
 package co.in.divi.launcher;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -125,9 +127,8 @@ public class DaemonService extends Service {
                         Log.d(TAG, "checking locking enabled - " + isLockingEnabled);
                 }
                 if (powerManager.isScreenOn()) {// check if screen on
-                    if (count % 3 == 0) {
-                        Intent it = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
-                        sendBroadcast(it);
+                    if (count % 2 == 0) {
+                        collapseDrawers();
                     }
                     tasks = am.getRunningTasks(10);
                     if (Config.DEBUG_DAEMON)
@@ -299,6 +300,21 @@ public class DaemonService extends Service {
                 Log.w(TAG, "error fetching allowed apps:", e);
             }
             return null;
+        }
+    }
+
+    // collapse statusbar
+    private void collapseDrawers() {
+//                                Intent it = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
+//                        sendBroadcast(it);
+        try {
+            Object service = getSystemService("statusbar");
+            Class<?> statusbarManager = Class.forName("android.app.StatusBarManager");
+            Method collapse = statusbarManager.getMethod("collapsePanels");
+            collapse.setAccessible(true);
+            collapse.invoke(service);
+        } catch (Exception e) {
+            Log.w(TAG, "error closing panels", e);
         }
     }
 
