@@ -6,14 +6,14 @@ public class Config {
 
 	public static final boolean	DEBUG							= false;
 	public static final boolean	DEBUG_DAEMON					= false;
-	public static final boolean	DEMO_MODE						= true;
+	public static final boolean	DEMO_MODE						= false;
 
 	public static final String	DEFAULT_PASSWORD				= "divi";
 	public static final String	HARD_PASSWORD					= "superDogSnowy";
 
 //	public static final String	APP_UPDATE_URL					= "https://dl.dropboxusercontent.com/u/5474079/demo/divi_app_update.json";
-    public static final String	APP_UPDATE_URL					= "https://dl.dropboxusercontent.com/u/5474079/demoChocoRoom/divi_app_update.json";
-//    public static final String	APP_UPDATE_URL					= "https://dl.dropboxusercontent.com/u/5474079/poranki/divi_app_update.json";
+//    public static final String	APP_UPDATE_URL					= "https://dl.dropboxusercontent.com/u/5474079/demoChocoRoom/divi_app_update.json";
+    public static final String	APP_UPDATE_URL					= "https://dl.dropboxusercontent.com/u/5474079/poranki/divi_app_update.json";
 
 	public static final int		SETTINGS_ACCESS_TIME			= 2 * 60 * 1000;
 

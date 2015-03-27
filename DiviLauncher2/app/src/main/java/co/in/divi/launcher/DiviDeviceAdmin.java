@@ -6,6 +6,7 @@ import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.os.SystemClock;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -78,7 +79,7 @@ public class DiviDeviceAdmin extends DeviceAdminReceiver {
 	@Override
 	public void onPasswordExpiring(Context context, Intent intent) {
 		// Log.d(TAG, "checking if our service is running...");
-		if (!BootBroadcastReceiver.receivedBootEvent) {
+		if ((!BootBroadcastReceiver.receivedBootEvent) && (SystemClock.elapsedRealtime()<60*1000)) {
 			Log.d(TAG, "Not running! - Probably in safe mode ? ");
 			DevicePolicyManager mDPM = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
 			ComponentName mDeviceAdmin = new ComponentName(context, DiviDeviceAdmin.class);
