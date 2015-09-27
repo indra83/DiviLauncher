@@ -5,22 +5,22 @@ android {
         debug {
             keyAlias 'do'
             keyPassword 'device'
-            storeFile file('C:/work/divi/workspace/DiviLauncher/device.keystore')
+//            storeFile file('C:/work/divi/workspace/DiviLauncher/device.keystore')
             storePassword 'device'
         }
     }
-    compileSdkVersion 21
-    buildToolsVersion "19.1.0"
+    compileSdkVersion 23
+    buildToolsVersion "23.0.1"
     defaultConfig {
         applicationId "co.in.divi.deviceowner"
         minSdkVersion 21
-        targetSdkVersion 21
+        targetSdkVersion 23
         versionCode 1
         versionName "1.0"
     }
     buildTypes {
         release {
-            runProguard false
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
