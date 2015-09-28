@@ -5,6 +5,7 @@ import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
@@ -20,11 +21,12 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.crashlytics.android.Crashlytics;
-import io.fabric.sdk.android.Fabric;
+
 import java.util.HashSet;
 import java.util.List;
 
 import in.co.divi.llauncher.R;
+import io.fabric.sdk.android.Fabric;
 
 public class HomeActivity extends Activity {
     public static final String TAG = HomeActivity.class.getSimpleName();
@@ -57,7 +59,11 @@ public class HomeActivity extends Activity {
                 Log.d(TAG, "time to fetch list:" + diff);
                 for (PackageInfo packageInfo : packageInfoList)
                     Log.d(TAG, " - " + packageInfo.packageName);
-//                new HideAppsTask().execute();
+
+                Intent i = new Intent();
+                i.setAction("co.in.divi.llauncher.LAUNCH_APP");
+                i.putExtra("INTENT_EXTRA_PACKAGE", SpecialAppNames.SETTINGS);
+                sendBroadcast(i);
             }
         });
         findViewById(R.id.hideSettingsButton).setOnClickListener(new View.OnClickListener() {
@@ -67,6 +73,19 @@ public class HomeActivity extends Activity {
                 mDPM.setApplicationHidden(mDeviceAdminRcvr, SpecialAppNames.SETTINGS, true);
                 long diff = System.currentTimeMillis() - now;
                 Log.d(TAG, "time to hide:" + diff);
+                try {
+                    PackageInfo packageInfo = getPackageManager().getPackageInfo(SpecialAppNames.SETTINGS, 0);
+                    Log.d(TAG, "found info! version:" + packageInfo.versionName);
+                } catch (PackageManager.NameNotFoundException e) {
+                    e.printStackTrace();
+                }
+
+                try {
+                    PackageInfo packageInfo = getPackageManager().getPackageInfo(SpecialAppNames.SETTINGS, PackageManager.GET_UNINSTALLED_PACKAGES);
+                    Log.d(TAG, "found info! version:" + packageInfo.versionName);
+                } catch (PackageManager.NameNotFoundException e) {
+                    e.printStackTrace();
+                }
             }
         });
         findViewById(R.id.unhideSettingsButton).setOnClickListener(new View.OnClickListener() {
@@ -95,8 +114,8 @@ public class HomeActivity extends Activity {
 
                 try {
                     mDPM.setSecureSetting(mDeviceAdminRcvr, Settings.Secure.INSTALL_NON_MARKET_APPS, "1");
-                }catch (Exception e) {
-                    Log.w(TAG,"error setting non-mkt-apps",e);
+                } catch (Exception e) {
+                    Log.w(TAG, "error setting non-mkt-apps", e);
                     throw e;
                 }
                 setSettingsStatusText();
