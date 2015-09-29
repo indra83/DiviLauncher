@@ -5,4 +5,6 @@ package co.in.divi.llauncher;
  */
 public final class SpecialAppNames {
     public static final String SETTINGS = "com.android.settings";
+    public static final String DIVI = "co.in.divi";
+    public static final String UPDATER = "co.in.divi.updater";
 }

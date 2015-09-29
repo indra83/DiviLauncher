@@ -9,20 +9,92 @@
         android:orientation="vertical">
 
         <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_margin="@dimen/activity_horizontal_margin"
             android:text="Provision Device"
-            android:textSize="24sp"
-            android:layout_gravity="center_horizontal"
-            android:layout_margin="@dimen/activity_horizontal_margin"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-        <TextView
-            android:text="Rootkit version: 0.1183 (Lenovo 2A)"
-            android:textSize="16sp"
-            android:layout_gravity="center_horizontal"
-            android:layout_margin="@dimen/activity_horizontal_margin"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:textSize="24sp" />
 
+        <TextView
+            android:id="@+id/deviceOwnerText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_margin="@dimen/activity_horizontal_margin"
+            android:textColor="#606060"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/clearDeviceOwner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Clear device owner" />
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/unknownSourcesButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/activity_horizontal_margin"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/unknownSourcesText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Select 'Install from Unknown sources'"
+                android:layout_margin="@dimen/activity_horizontal_margin"
+                android:layout_weight="3" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/installDiviButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/activity_horizontal_margin"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/installDiviText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Install Divi application before proceeding"
+                android:layout_margin="@dimen/activity_horizontal_margin"
+                android:layout_weight="3" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/accessibilityButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/activity_horizontal_margin"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/accessibilityText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Enable Divi Accessibility service"
+                android:layout_margin="@dimen/activity_horizontal_margin"
+                android:layout_weight="3" />
+        </LinearLayout>
+
+        <!--
         <LinearLayout
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
@@ -43,6 +115,13 @@
                 android:layout_weight="3" />
         </LinearLayout>
 
+-->
+        <Button
+            android:id="@+id/provisionButton"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/activity_horizontal_margin"
+            android:text="Complete Provisioning" />
 
     </LinearLayout>
 </ScrollView>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg">
@@ -17,19 +18,36 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
-        android:layout_margin="@dimen/activity_horizontal_margin" />
+        android:layout_margin="@dimen/activity_horizontal_margin"
+        android:clickable="true"
+        android:textColor="#606060" />
 
     <TextView
-        android:id="@+id/provisionText"
+        android:id="@+id/allowedAppsText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_margin="@dimen/activity_horizontal_margin" />
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_margin="18dp"
+        android:text="blah blah"
+        android:textColor="@android:color/holo_red_dark"
+        android:textSize="16sp" />
 
     <Button
-        android:id="@+id/privisionButton"
+        android:id="@+id/provisionButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/provisionText"
+        android:layout_margin="@dimen/activity_horizontal_margin"
         android:text="Complete Provisioning" />
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:text="Rootkit version: 0.1183 (Lenovo 2A - custom)"
+        android:textColor="#606060"
+        android:textSize="14sp" />
+
 </RelativeLayout>
