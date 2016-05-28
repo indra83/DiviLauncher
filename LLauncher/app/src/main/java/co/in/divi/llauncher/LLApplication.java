@@ -2,7 +2,6 @@ package co.in.divi.llauncher;
 
 import android.app.Application;
 import android.content.SharedPreferences;
-import android.util.Log;
 
 import com.crashlytics.android.Crashlytics;
 
@@ -20,6 +19,7 @@ public class LLApplication extends Application {
     private static final String PREF_PROVISIONED_FLAG = "PREF_PROVISIONED_FLAG";
 
     public HashSet<String> allowedPackages;
+    private boolean isBigBoss;
 
     private SharedPreferences prefs;
 
@@ -34,6 +34,7 @@ public class LLApplication extends Application {
         }
 
         prefs = getSharedPreferences(PREFS_FILE, MODE_PRIVATE);
+        isBigBoss = false;
     }
 
     public boolean isDeviceProvisioned() {
@@ -42,5 +43,13 @@ public class LLApplication extends Application {
 
     public void setDeviceProvisioned(boolean isProvisioned) {
         prefs.edit().putBoolean(PREF_PROVISIONED_FLAG, isProvisioned).apply();
+    }
+
+    public boolean isBigBoss() {
+        return isBigBoss;
+    }
+
+    public void setBigBoss(boolean isBigBoss) {
+        this.isBigBoss = isBigBoss;
     }
 }

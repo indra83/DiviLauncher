@@ -1,6 +1,5 @@
 package co.in.divi.llauncher;
 
-import android.app.admin.DeviceAdminReceiver;
 import android.app.admin.DevicePolicyManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -12,8 +11,6 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
-
-import io.fabric.sdk.android.Fabric;
 
 /**
  * Created by indra83 on 9/27/15.

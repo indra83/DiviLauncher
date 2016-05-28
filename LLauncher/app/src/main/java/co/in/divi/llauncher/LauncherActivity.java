@@ -24,11 +24,11 @@ import in.co.divi.llauncher.R;
 public class LauncherActivity extends Activity {
     private static final String TAG = LauncherActivity.class.getSimpleName();
 
-    Button provisionButton;
+    Button provisionButton,bigBossButton;
     TextView versionText, allowedAppsText;
 
     LLApplication app;
-    Handler handler;
+    Handler handler = new Handler();
     Timer timer = new Timer();
 
     private long lastClickTime;
@@ -40,6 +40,7 @@ public class LauncherActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_launcher);
         provisionButton = (Button) findViewById(R.id.provisionButton);
+        bigBossButton = (Button) findViewById(R.id.bigBossButton);
         versionText = (TextView) findViewById(R.id.versionText);
         allowedAppsText = (TextView) findViewById(R.id.allowedAppsText);
 
@@ -68,8 +69,9 @@ public class LauncherActivity extends Activity {
                     if (toast != null) toast.cancel();
                     if (clickCount >= 8) {
                         // Start admin activity
+                        startActivity(new Intent(LauncherActivity.this, BigBossActivity.class));
                         clickCount = 0;
-                        Toast.makeText(LauncherActivity.this,"Opening settings...",Toast.LENGTH_SHORT).show();
+                        Toast.makeText(LauncherActivity.this,"Opening device management...",Toast.LENGTH_SHORT).show();
                     } else if (clickCount > 3) {
                         resetTimer();
                         int remaining = 8 - clickCount;
@@ -111,6 +113,17 @@ public class LauncherActivity extends Activity {
         } else {
             provisionButton.setVisibility(View.VISIBLE);
         }
+        if(app.isBigBoss())
+            bigBossButton.setVisibility(View.VISIBLE);
+        else
+        bigBossButton.setVisibility(View.GONE);
+
+        bigBossButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(LauncherActivity.this, BigBossActivity.class));
+            }
+        });
 
         setAllowedAppsText();
     }
@@ -163,7 +176,12 @@ public class LauncherActivity extends Activity {
             startActivity(i);
         } catch (Exception e) {
             Log.e(TAG, "error launching divi", e);
-            Toast.makeText(LauncherActivity.this, "Error launching Divi", Toast.LENGTH_LONG).show();
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(LauncherActivity.this, "Error launching Divi", Toast.LENGTH_LONG).show();
+                }
+            });
             try {
                 i = manager.getLaunchIntentForPackage("co.in.divi");
                 if (i == null)

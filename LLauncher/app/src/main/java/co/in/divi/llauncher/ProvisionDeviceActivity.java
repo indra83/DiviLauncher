@@ -67,7 +67,7 @@ public class ProvisionDeviceActivity extends Activity {
         findViewById(R.id.clearDeviceOwner).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mDPM.setApplicationHidden(mDeviceAdminRcvr,SpecialAppNames.SETTINGS,false);
+                mDPM.setApplicationHidden(mDeviceAdminRcvr, SpecialAppNames.SETTINGS, false);
                 mDPM.clearDeviceOwnerApp(getPackageName());
                 setupUI();
             }
@@ -137,7 +137,7 @@ public class ProvisionDeviceActivity extends Activity {
                     startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
                 }
             });
-            readyToProvision = false;
+//            readyToProvision = false;
         } else {
             accessibilityButton.setText("Accessibility is on");
             accessibilityButton.setEnabled(false);
@@ -201,9 +201,23 @@ public class ProvisionDeviceActivity extends Activity {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            app.setDeviceProvisioned(true);
-            Toast.makeText(ProvisionDeviceActivity.this, "Device Provisioned!", Toast.LENGTH_LONG).show();
-            finish();
+            boolean blockingSuccess = true;
+            String failedBloocking = null;
+            List<PackageInfo> packageInfoList = getPackageManager().getInstalledPackages(PackageManager.GET_UNINSTALLED_PACKAGES);
+            for (PackageInfo packageInfo : packageInfoList) {
+                if (!allowedPackages.contains(packageInfo.packageName)) {
+                    blockingSuccess = false;
+                    failedBloocking = packageInfo.packageName;
+                }
+            }
+
+            if (blockingSuccess) {
+                app.setDeviceProvisioned(true);
+                Toast.makeText(ProvisionDeviceActivity.this, "Device Provisioned!", Toast.LENGTH_LONG).show();
+                finish();
+            } else {
+                Toast.makeText(ProvisionDeviceActivity.this, "Provisioning failed - " + failedBloocking, Toast.LENGTH_LONG).show();
+            }
         }
     }
 

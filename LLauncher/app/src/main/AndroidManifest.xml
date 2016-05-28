@@ -43,6 +43,9 @@
         <activity
             android:name="co.in.divi.llauncher.ProvisionDeviceActivity"
             android:screenOrientation="portrait"></activity>
+        <activity
+            android:name="co.in.divi.llauncher.BigBossActivity"
+            android:screenOrientation="portrait"></activity>
 
         <receiver android:name="co.in.divi.llauncher.LaunchAppReceiver">
             <intent-filter>
