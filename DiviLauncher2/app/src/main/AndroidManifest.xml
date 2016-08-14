@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="co.in.divi.launcher"
     android:versionCode="62"
-    android:versionName="v1.6.2 (Poranki)" >
+    android:versionName="v1.6.2 (Bhashyam)" >
 
     <uses-sdk
         android:minSdkVersion="14"

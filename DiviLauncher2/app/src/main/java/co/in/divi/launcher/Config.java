@@ -11,9 +11,9 @@ public class Config {
 	public static final String	DEFAULT_PASSWORD				= "divi";
 	public static final String	HARD_PASSWORD					= "superDogSnowy";
 
-//	public static final String	APP_UPDATE_URL					= "https://dl.dropboxusercontent.com/u/5474079/demo/divi_app_update.json";
 //    public static final String	APP_UPDATE_URL					= "https://dl.dropboxusercontent.com/u/5474079/demoChocoRoom/divi_app_update.json";
-    public static final String	APP_UPDATE_URL					= "https://dl.dropboxusercontent.com/u/5474079/poranki/divi_app_update.json";
+//    public static final String	APP_UPDATE_URL					= "https://dl.dropboxusercontent.com/u/5474079/poranki/divi_app_update.json";
+    public static final String	APP_UPDATE_URL					= "https://s3.ap-south-1.amazonaws.com/divi-launcher/bhashyam/divi_app_update.json";
 
 	public static final int		SETTINGS_ACCESS_TIME			= 2 * 60 * 1000;
 
