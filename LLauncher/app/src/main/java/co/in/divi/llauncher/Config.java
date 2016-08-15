@@ -8,5 +8,5 @@ public class Config {
 
     public static final String DIVI_ACCESSIBILITY_SERVICE = "co.in.divi/co.in.divi.apps.TopActivityMonitorService";
 
-    public static final String APP_UPDATE_URL = "https://dl.dropboxusercontent.com/u/5474079/poranki/divi_app_update.json";
+    public static final String APP_UPDATE_URL = "https://s3.ap-south-1.amazonaws.com/divi-launcher/bhashyam/divi_app_update_l.json";
 }
