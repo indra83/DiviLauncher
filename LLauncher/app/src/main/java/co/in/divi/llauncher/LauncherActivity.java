@@ -24,7 +24,7 @@ import in.co.divi.llauncher.R;
 public class LauncherActivity extends Activity {
     private static final String TAG = LauncherActivity.class.getSimpleName();
 
-    Button provisionButton,bigBossButton;
+    Button provisionButton, bigBossButton, updateButton;
     TextView versionText, allowedAppsText;
 
     LLApplication app;
@@ -41,6 +41,7 @@ public class LauncherActivity extends Activity {
         setContentView(R.layout.activity_launcher);
         provisionButton = (Button) findViewById(R.id.provisionButton);
         bigBossButton = (Button) findViewById(R.id.bigBossButton);
+        updateButton = (Button) findViewById(R.id.updateButton);
         versionText = (TextView) findViewById(R.id.versionText);
         allowedAppsText = (TextView) findViewById(R.id.allowedAppsText);
 
@@ -58,6 +59,15 @@ public class LauncherActivity extends Activity {
             }
         });
 
+        updateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent();
+                i.setAction("co.in.divi.llauncher.DOWNLOAD_APP");
+                startActivity(i);
+            }
+        });
+
         clickCount = 0;
         lastClickTime = 0;
         versionText.setOnClickListener(new View.OnClickListener() {
@@ -71,7 +81,7 @@ public class LauncherActivity extends Activity {
                         // Start admin activity
                         startActivity(new Intent(LauncherActivity.this, BigBossActivity.class));
                         clickCount = 0;
-                        Toast.makeText(LauncherActivity.this,"Opening device management...",Toast.LENGTH_SHORT).show();
+                        Toast.makeText(LauncherActivity.this, "Opening device management...", Toast.LENGTH_SHORT).show();
                     } else if (clickCount > 3) {
                         resetTimer();
                         int remaining = 8 - clickCount;
@@ -103,7 +113,7 @@ public class LauncherActivity extends Activity {
 
 
         ///// Testing!
-   }
+    }
 
     @Override
     protected void onStart() {
@@ -113,12 +123,12 @@ public class LauncherActivity extends Activity {
         } else {
             provisionButton.setVisibility(View.VISIBLE);
         }
-        if(app.isBigBoss())
+        if (app.isBigBoss())
             bigBossButton.setVisibility(View.VISIBLE);
         else
-        bigBossButton.setVisibility(View.GONE);
+            bigBossButton.setVisibility(View.GONE);
 
-        bigBossButton.setOnClickListener(new View.OnClickListener(){
+        bigBossButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(LauncherActivity.this, BigBossActivity.class));
@@ -141,7 +151,7 @@ public class LauncherActivity extends Activity {
     }
 
     private void resetTimer() {
-        if(timer!=null)
+        if (timer != null)
             timer.cancel();
         timer = new Timer();
         timer.schedule(new TimerTask() {
@@ -158,7 +168,9 @@ public class LauncherActivity extends Activity {
             ignoreApps.add(app);
         StringBuilder sb = new StringBuilder();
         for (PackageInfo pi : getPackageManager().getInstalledPackages(0)) {
+//            Log.d(TAG,"app: "+pi.packageName);
             if (!ignoreApps.contains(pi.packageName)) {
+                Log.d(TAG, "new app: " + pi.packageName);
                 sb.append(pi.packageName).append("\n");
             }
         }

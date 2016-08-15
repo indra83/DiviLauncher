@@ -22,6 +22,7 @@ public class LaunchAppReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        Log.d(TAG,"onReceive"+intent.getStringExtra("INTENT_EXTRA_PACKAGE"));
         try {
             LLApplication app = (LLApplication) context.getApplicationContext();
             DevicePolicyManager mDPM = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);

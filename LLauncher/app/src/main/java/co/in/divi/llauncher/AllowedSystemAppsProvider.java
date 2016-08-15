@@ -80,5 +80,7 @@ final class AllowedSystemAppsProvider {
             "com.mediatek.nlpservice",
             "com.android.contacts",
             "com.mediatek.floatmenu"
+
+            // Lenovo Tab3 7
     };
 }

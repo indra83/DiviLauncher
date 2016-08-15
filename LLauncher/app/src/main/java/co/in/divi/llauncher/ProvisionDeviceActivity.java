@@ -63,16 +63,26 @@ public class ProvisionDeviceActivity extends Activity {
         super.onStart();
         setupUI();
 
-        // TESTING ONLY!
+        //TODO: TESTING ONLY!
         findViewById(R.id.clearDeviceOwner).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mDPM.setApplicationHidden(mDeviceAdminRcvr, SpecialAppNames.SETTINGS, false);
-                mDPM.clearDeviceOwnerApp(getPackageName());
-                setupUI();
+                try {
+                    new UnhideAppsTask().execute();
+                    mDPM.setApplicationHidden(mDeviceAdminRcvr, SpecialAppNames.SETTINGS, false);
+                } catch (Exception e) {
+                    Log.e(TAG, "error clearing device owner..", e);
+                    Toast.makeText(ProvisionDeviceActivity.this, "error clearing owner", Toast.LENGTH_SHORT).show();
+                }
             }
         });
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (app.isDeviceProvisioned())
+            finish();
     }
 
     private void setupUI() {
@@ -94,7 +104,7 @@ public class ProvisionDeviceActivity extends Activity {
                 @Override
                 public void onClick(View v) {
                     Intent intentSettings = new Intent();
-                    intentSettings.setAction(android.provider.Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS);
+                    intentSettings.setAction(Settings.ACTION_SECURITY_SETTINGS);
                     startActivity(intentSettings);
                 }
             });
@@ -117,6 +127,10 @@ public class ProvisionDeviceActivity extends Activity {
             installDiviButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    Intent i = new Intent();
+                    i.setAction("co.in.divi.llauncher.DOWNLOAD_APP");
+                    startActivity(i);
+
                     setupUI();
                 }
             });
@@ -151,7 +165,7 @@ public class ProvisionDeviceActivity extends Activity {
                     // set settings
 
                     //TODO: for debug!
-                    mDPM.setGlobalSetting(mDeviceAdminRcvr, Settings.Global.ADB_ENABLED, "1");
+                    mDPM.setGlobalSetting(mDeviceAdminRcvr, Settings.Global.ADB_ENABLED, "0");
 
                     mDPM.setGlobalSetting(mDeviceAdminRcvr, Settings.Global.USB_MASS_STORAGE_ENABLED, "0");
                     mDPM.setGlobalSetting(mDeviceAdminRcvr, Settings.Global.AUTO_TIME, "1");
@@ -174,8 +188,7 @@ public class ProvisionDeviceActivity extends Activity {
 
     }
 
-
-    class HideAppsTask extends AsyncTask<Void, String, Void> {
+    class UnhideAppsTask extends AsyncTask<Void, String, Void> {
         HashSet<String> allowedPackages;
 
         @Override
@@ -190,9 +203,51 @@ public class ProvisionDeviceActivity extends Activity {
         protected Void doInBackground(Void... params) {
             List<PackageInfo> packageInfoList = getPackageManager().getInstalledPackages(PackageManager.GET_UNINSTALLED_PACKAGES);
             for (PackageInfo packageInfo : packageInfoList) {
+                if (mDPM.isApplicationHidden(mDeviceAdminRcvr, packageInfo.packageName)) {
+                    Log.d(TAG, "Unhiding app " + packageInfo.packageName);
+                    boolean success = mDPM.setApplicationHidden(mDeviceAdminRcvr, packageInfo.packageName, false);
+                }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            try {
+                mDPM.clearDeviceOwnerApp(getPackageName());
+                mDPM.removeActiveAdmin(mDeviceAdminRcvr);
+            } catch (Exception e) {
+                Log.e(TAG, "error clearing device admin..", e);
+                Toast.makeText(ProvisionDeviceActivity.this, "error clearing admin", Toast.LENGTH_SHORT).show();
+            }
+
+            app.setDeviceProvisioned(false);
+            Toast.makeText(ProvisionDeviceActivity.this, "Device UnProvisioned!", Toast.LENGTH_LONG).show();
+            setupUI();
+        }
+    }
+
+    class HideAppsTask extends AsyncTask<Void, String, Void> {
+        HashSet<String> allowedPackages;
+
+        @Override
+        protected void onPreExecute() {
+            allowedPackages = new HashSet<>();
+            for (String pkg : AllowedSystemAppsProvider.ALLOWED_APPS)
+                allowedPackages.add(pkg);
+            super.onPreExecute();
+            provisionButton.setEnabled(false);
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            List<PackageInfo> packageInfoList = getPackageManager().getInstalledPackages(PackageManager.GET_UNINSTALLED_PACKAGES);
+            for (PackageInfo packageInfo : packageInfoList) {
                 if (!allowedPackages.contains(packageInfo.packageName)) {
                     Log.d(TAG, "hiding app " + packageInfo.packageName);
-                    mDPM.setApplicationHidden(mDeviceAdminRcvr, packageInfo.packageName, true);
+                    boolean success = mDPM.setApplicationHidden(mDeviceAdminRcvr, packageInfo.packageName, true);
+                    Log.d(TAG, "succeeded? " + success);
                 }
             }
             return null;
@@ -205,10 +260,18 @@ public class ProvisionDeviceActivity extends Activity {
             String failedBloocking = null;
             List<PackageInfo> packageInfoList = getPackageManager().getInstalledPackages(PackageManager.GET_UNINSTALLED_PACKAGES);
             for (PackageInfo packageInfo : packageInfoList) {
-                if (!allowedPackages.contains(packageInfo.packageName)) {
+                Log.d(TAG, "app info: " + packageInfo.packageName + " " + mDPM.isApplicationHidden(mDeviceAdminRcvr, packageInfo.packageName));
+                // for Lenovo 8 inch
+//                if (!allowedPackages.contains(packageInfo.packageName)) {
+//                    blockingSuccess = false;
+//                    failedBloocking = packageInfo.packageName;
+//                }
+                if (!allowedPackages.contains(packageInfo.packageName) &&
+                        !mDPM.isApplicationHidden(mDeviceAdminRcvr, packageInfo.packageName)) {
                     blockingSuccess = false;
                     failedBloocking = packageInfo.packageName;
                 }
+
             }
 
             if (blockingSuccess) {

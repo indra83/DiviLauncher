@@ -23,12 +23,13 @@ public class BigBossActivity extends Activity {
     private static final String TAG = BigBossActivity.class.getSimpleName();
 
     View otpContainer, actionsContainer;
-    Button settingsButton, browserButton, marketButton, exitButton;
+    Button settingsButton, browserButton, marketButton, reprovisionButton, exitButton;
 
     TextView challengeText;
     EditText challengeResp;
 
     LLApplication app;
+    int keyCount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +43,7 @@ public class BigBossActivity extends Activity {
         settingsButton = (Button) findViewById(R.id.settings);
         browserButton = (Button) findViewById(R.id.browser);
         marketButton = (Button) findViewById(R.id.market);
+        reprovisionButton = (Button) findViewById(R.id.reprovision);
         exitButton = (Button) findViewById(R.id.exit);
 
 
@@ -51,6 +53,7 @@ public class BigBossActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
+        keyCount = 0;
         otpContainer.setVisibility(View.GONE);
         actionsContainer.setVisibility(View.GONE);
         if (!app.isBigBoss()) {
@@ -68,15 +71,19 @@ public class BigBossActivity extends Activity {
 
                 @Override
                 public void afterTextChanged(Editable s) {
-                    try {
-                        if (isAuthorized(challenge, Integer.parseInt(challengeResp.getText().toString()))) {
-                            app.setBigBoss(true);
-                            otpContainer.setVisibility(View.GONE);
-                            actionsContainer.setVisibility(View.VISIBLE);
+                    keyCount++;
+                    if (keyCount > 12)
+                        finish();
+                    else
+                        try {
+                            if (isAuthorized(challenge, Integer.parseInt(challengeResp.getText().toString()))) {
+                                app.setBigBoss(true);
+                                otpContainer.setVisibility(View.GONE);
+                                actionsContainer.setVisibility(View.VISIBLE);
+                            }
+                        } catch (Exception e) {
+                            //ignore?
                         }
-                    } catch (Exception e) {
-                        //ignore?
-                    }
                 }
             });
         } else
@@ -115,6 +122,15 @@ public class BigBossActivity extends Activity {
 
                     mDPM.setApplicationHidden(mDeviceAdminRcvr, SpecialAppNames.MARKET, false);
                     startActivity(getPackageManager().getLaunchIntentForPackage(SpecialAppNames.MARKET));
+                }
+            }
+        });
+        reprovisionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (app.isBigBoss()) {
+                    app.setDeviceProvisioned(false);
+                    finish();
                 }
             }
         });
