@@ -5,8 +5,10 @@ import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -144,6 +146,18 @@ public class BigBossActivity extends Activity {
                     mDPM.setApplicationHidden(mDeviceAdminRcvr, SpecialAppNames.SETTINGS, true);
                     mDPM.setApplicationHidden(mDeviceAdminRcvr, SpecialAppNames.BROWSER, true);
                     mDPM.setApplicationHidden(mDeviceAdminRcvr, SpecialAppNames.MARKET, true);
+
+                    mDPM.setGlobalSetting(mDeviceAdminRcvr, Settings.Global.ADB_ENABLED, "0");
+                    mDPM.setGlobalSetting(mDeviceAdminRcvr, Settings.Global.USB_MASS_STORAGE_ENABLED, "0");
+                    mDPM.setGlobalSetting(mDeviceAdminRcvr, Settings.Global.AUTO_TIME, "1");
+                    mDPM.setGlobalSetting(mDeviceAdminRcvr, Settings.Global.AUTO_TIME_ZONE, "1");
+                    mDPM.setGlobalSetting(mDeviceAdminRcvr, Settings.Global.WIFI_SLEEP_POLICY, "2");
+
+                    try {
+                        mDPM.setSecureSetting(mDeviceAdminRcvr, Settings.Secure.INSTALL_NON_MARKET_APPS, "1");
+                    } catch (Exception e) {
+                        Log.w(TAG, "error setting non-mkt-apps", e);
+                    }
 
                     app.setBigBoss(false);
                     finish();

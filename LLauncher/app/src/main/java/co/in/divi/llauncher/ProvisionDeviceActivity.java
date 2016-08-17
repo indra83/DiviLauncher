@@ -163,8 +163,6 @@ public class ProvisionDeviceActivity extends Activity {
                 @Override
                 public void onClick(View v) {
                     // set settings
-
-                    //TODO: for debug!
                     mDPM.setGlobalSetting(mDeviceAdminRcvr, Settings.Global.ADB_ENABLED, "0");
 
                     mDPM.setGlobalSetting(mDeviceAdminRcvr, Settings.Global.USB_MASS_STORAGE_ENABLED, "0");

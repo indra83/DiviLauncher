@@ -17,6 +17,7 @@ public class LLApplication extends Application {
 
     private static final String PREFS_FILE = "llauncher_prefs";
     private static final String PREF_PROVISIONED_FLAG = "PREF_PROVISIONED_FLAG";
+    private static final String PREF_BIG_BOSS_FLAG = "BIG_BOSS_FLAG";
 
     public HashSet<String> allowedPackages;
     private boolean isBigBoss;
@@ -34,7 +35,7 @@ public class LLApplication extends Application {
         }
 
         prefs = getSharedPreferences(PREFS_FILE, MODE_PRIVATE);
-        isBigBoss = false;
+        isBigBoss = prefs.getBoolean(PREF_BIG_BOSS_FLAG, false);
     }
 
     public boolean isDeviceProvisioned() {
@@ -51,5 +52,6 @@ public class LLApplication extends Application {
 
     public void setBigBoss(boolean isBigBoss) {
         this.isBigBoss = isBigBoss;
+        prefs.edit().putBoolean(PREF_BIG_BOSS_FLAG, isBigBoss).apply();
     }
 }

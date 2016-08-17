@@ -32,8 +32,8 @@ android {
         applicationId "co.in.divi.llauncher"
         minSdkVersion 21
         targetSdkVersion 23
-        versionCode 1
-        versionName "1.0 L (bhashyam)"
+        versionCode 11
+        versionName "1.1 L (bhashyam)"
     }
     buildTypes {
         release {
