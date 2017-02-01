@@ -33,7 +33,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 23
         versionCode 11
-        versionName "1.1 L (bhashyam)"
+        versionName "1.1 L (demo)"
     }
     buildTypes {
         release {
